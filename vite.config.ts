@@ -13,7 +13,25 @@ export default defineConfig({
     },
   },
   preview: { port: 3000, strictPort: true },
-  build: { sourcemap: true },
+  build: {
+    // Source maps are not published: the image serves everything in dist to the internet.
+    sourcemap: false,
+    rolldownOptions: {
+      output: {
+        // Third-party code changes far less often than the app, so give it its own
+        // long-cacheable chunks.
+        codeSplitting: {
+          groups: [
+            {
+              name: 'react',
+              test: /node_modules[\\/](react|react-dom|react-router|scheduler)[\\/]/,
+            },
+            { name: 'vendor', test: /node_modules[\\/]/ },
+          ],
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',
