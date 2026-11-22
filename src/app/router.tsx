@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
+import { debitOrderRoutes } from '../features/debit-orders/routes';
 import { AppLayout } from './AppLayout';
 import { NotFoundPage } from './NotFoundPage';
 import { RouteError } from './RouteError';
@@ -13,6 +14,7 @@ export const routes: RouteObject[] = [
         errorElement: <RouteError />,
         children: [
           { index: true, element: <Navigate to="/debit-orders" replace /> },
+          ...debitOrderRoutes,
           { path: '*', element: <NotFoundPage /> },
         ],
       },
