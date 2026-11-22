@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { debitOrderRoutes } from '../features/debit-orders/routes';
 import { disputeRoutes } from '../features/disputes/routes';
+import { inboxRoutes } from '../features/inbox/routes';
 import { mandateRoutes } from '../features/mandates/routes';
 import { AppLayout } from './AppLayout';
 import { NotFoundPage } from './NotFoundPage';
@@ -19,6 +20,7 @@ export const routes: RouteObject[] = [
           ...debitOrderRoutes,
           ...disputeRoutes,
           ...mandateRoutes,
+          ...inboxRoutes,
           { path: '*', element: <NotFoundPage /> },
         ],
       },
