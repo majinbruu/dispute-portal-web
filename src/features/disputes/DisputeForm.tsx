@@ -146,6 +146,9 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
         </p>
         {submit.isError ? <SubmitError problem={toProblem(submit.error)} order={order} /> : null}
         <div className={styles.actions}>
+          <Button onClick={onSubmit} disabled={submit.isPending}>
+            {submit.isPending ? 'Submitting…' : 'Submit dispute'}
+          </Button>
           <Button
             variant="secondary"
             disabled={submit.isPending}
@@ -155,9 +158,6 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
             }}
           >
             Back
-          </Button>
-          <Button onClick={onSubmit} disabled={submit.isPending}>
-            {submit.isPending ? 'Submitting…' : 'Submit dispute'}
           </Button>
         </div>
       </div>
@@ -230,10 +230,10 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
       </div>
 
       <div className={styles.actions}>
+        <Button type="submit">Continue</Button>
         <ButtonLink to={`/debit-orders/${order.id}`} variant="secondary">
           Cancel
         </ButtonLink>
-        <Button type="submit">Continue</Button>
       </div>
     </form>
   );
