@@ -113,9 +113,9 @@ describe('debit order list', () => {
     const lastQuery = () =>
       new URL(requestsTo(fetchMock, 'GET', '/api/v1/debit-orders').at(-1)!.url).searchParams;
     expect(Object.fromEntries(lastQuery())).toEqual({
-      Sort: '-actionDate',
-      Page: '2',
-      PageSize: '10',
+      sort: '-actionDate',
+      page: '2',
+      pageSize: '10',
     });
 
     await user.selectOptions(screen.getByLabelText('Status'), 'Failed');
@@ -124,18 +124,18 @@ describe('debit order list', () => {
 
     await waitFor(() => {
       expect(Object.fromEntries(lastQuery())).toEqual({
-        Status: 'Failed',
-        MandateType: 'DebiCheck',
-        Sort: '-amount',
-        Page: '1',
-        PageSize: '10',
+        status: 'Failed',
+        mandateType: 'DebiCheck',
+        sort: '-amount',
+        page: '1',
+        pageSize: '10',
       });
     });
     expect(router.state.location.search).toBe('?status=Failed&mandateType=DebiCheck&sort=-amount');
 
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await waitFor(() => {
-      expect(lastQuery().get('Page')).toBe('3');
+      expect(lastQuery().get('page')).toBe('3');
     });
   });
 

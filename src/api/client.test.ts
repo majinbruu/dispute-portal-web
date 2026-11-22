@@ -26,12 +26,12 @@ describe('createApiClient', () => {
     const { client, sentRequest } = setup(() => jsonResponse({ unread: 3 }));
 
     await client.GET('/api/v1/debit-orders', {
-      params: { query: { Status: 'Failed', Page: 2, PageSize: 10 } },
+      params: { query: { status: 'Failed', page: 2, pageSize: 10 } },
     });
 
     const request = sentRequest();
     expect(request.url).toBe(
-      'http://api.test/api/v1/debit-orders?Status=Failed&Page=2&PageSize=10',
+      'http://api.test/api/v1/debit-orders?status=Failed&page=2&pageSize=10',
     );
     expect(request.headers.get('Authorization')).toBe('Bearer tok');
     expect(request.headers.get('Accept')).toContain('application/problem+json');

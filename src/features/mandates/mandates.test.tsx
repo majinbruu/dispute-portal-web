@@ -44,9 +44,9 @@ describe('mandate lists', () => {
 
     const url = new URL(requestsTo(fetchMock, 'GET', '/api/v1/mandates')[0]!.url);
     expect(Object.fromEntries(url.searchParams)).toEqual({
-      Type: 'DebiCheck',
-      Page: '1',
-      PageSize: '10',
+      type: 'DebiCheck',
+      page: '1',
+      pageSize: '10',
     });
   });
 
@@ -69,7 +69,7 @@ describe('mandate lists', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'Registered mandates' }),
     ).toBeInTheDocument();
-    expect(requestsTo(fetchMock, 'GET', '/api/v1/mandates')[0]!.url).toContain('Type=Registered');
+    expect(requestsTo(fetchMock, 'GET', '/api/v1/mandates')[0]!.url).toContain('type=Registered');
   });
 
   it('pages through mandates', async () => {
@@ -83,7 +83,7 @@ describe('mandate lists', () => {
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
     await waitFor(() => {
-      expect(requestsTo(fetchMock, 'GET', '/api/v1/mandates').at(-1)!.url).toContain('Page=2');
+      expect(requestsTo(fetchMock, 'GET', '/api/v1/mandates').at(-1)!.url).toContain('page=2');
     });
   });
 

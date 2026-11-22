@@ -155,7 +155,7 @@ describe('inbox', () => {
     await user.click(screen.getByRole('button', { name: 'Next' }));
 
     await waitFor(() => {
-      expect(requestsTo(fetchMock, 'GET', '/api/v1/notifications').at(-1)!.url).toContain('Page=2');
+      expect(requestsTo(fetchMock, 'GET', '/api/v1/notifications').at(-1)!.url).toContain('page=2');
     });
   });
 });

@@ -27,11 +27,11 @@ export function useDebitOrders(filters: DebitOrderFilters) {
           api.GET('/api/v1/debit-orders', {
             params: {
               query: {
-                Status: filters.status,
-                MandateType: filters.mandateType,
-                Sort: filters.sort,
-                Page: filters.page,
-                PageSize: filters.pageSize,
+                status: filters.status,
+                mandateType: filters.mandateType,
+                sort: filters.sort,
+                page: filters.page,
+                pageSize: filters.pageSize,
               },
             },
             signal,
@@ -60,7 +60,7 @@ export function useMandates(filters: MandateFilters) {
         await unwrap(
           api.GET('/api/v1/mandates', {
             params: {
-              query: { Type: filters.type, Page: filters.page, PageSize: filters.pageSize },
+              query: { type: filters.type, page: filters.page, pageSize: filters.pageSize },
             },
             signal,
           }),
@@ -125,7 +125,7 @@ export function useDisputes(filters: DisputeFilters) {
         await unwrap(
           api.GET('/api/v1/disputes', {
             params: {
-              query: { State: filters.state, Page: filters.page, PageSize: filters.pageSize },
+              query: { state: filters.state, page: filters.page, pageSize: filters.pageSize },
             },
             signal,
           }),
@@ -158,7 +158,7 @@ export function useNotifications(filters: NotificationFilters) {
       normalizePaged(
         await unwrap(
           api.GET('/api/v1/notifications', {
-            params: { query: { Page: filters.page, PageSize: filters.pageSize } },
+            params: { query: { page: filters.page, pageSize: filters.pageSize } },
             signal,
           }),
         ),

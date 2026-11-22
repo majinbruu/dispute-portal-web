@@ -423,13 +423,13 @@ export interface operations {
   ListDebitOrders: {
     parameters: {
       query?: {
-        Status?: components['schemas']['DebitOrderStatus'];
-        MandateType?: components['schemas']['MandateType'];
-        From?: string;
-        To?: string;
-        Sort?: string;
-        Page?: number | string;
-        PageSize?: number | string;
+        status?: components['schemas']['DebitOrderStatus'];
+        mandateType?: components['schemas']['MandateType'];
+        from?: string;
+        to?: string;
+        sort?: string;
+        page?: number | string;
+        pageSize?: number | string;
       };
       header?: never;
       path?: never;
@@ -491,9 +491,9 @@ export interface operations {
   ListMandates: {
     parameters: {
       query?: {
-        Type?: components['schemas']['MandateType'];
-        Page?: number | string;
-        PageSize?: number | string;
+        type?: components['schemas']['MandateType'];
+        page?: number | string;
+        pageSize?: number | string;
       };
       header?: never;
       path?: never;
@@ -555,9 +555,9 @@ export interface operations {
   ListDisputes: {
     parameters: {
       query?: {
-        State?: components['schemas']['DisputeState'];
-        Page?: number | string;
-        PageSize?: number | string;
+        state?: components['schemas']['DisputeState'];
+        page?: number | string;
+        pageSize?: number | string;
       };
       header?: never;
       path?: never;
@@ -712,9 +712,9 @@ export interface operations {
   ListNotifications: {
     parameters: {
       query?: {
-        UnreadOnly?: boolean;
-        Page?: number | string;
-        PageSize?: number | string;
+        unreadOnly?: boolean;
+        page?: number | string;
+        pageSize?: number | string;
       };
       header?: never;
       path?: never;

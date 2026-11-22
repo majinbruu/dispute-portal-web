@@ -12,7 +12,7 @@ const DETAIL = `GET /api/v1/disputes/${DISPUTE_ID}`;
 function listByState(pending: unknown[], completed: unknown[]) {
   return (request: Request) =>
     jsonResponse(
-      paged(new URL(request.url).searchParams.get('State') === 'Pending' ? pending : completed),
+      paged(new URL(request.url).searchParams.get('state') === 'Pending' ? pending : completed),
     );
 }
 
@@ -74,7 +74,7 @@ describe('dispute history', () => {
     expect(completed.getByRole('link')).toHaveTextContent('Declined');
 
     const states = requestsTo(fetchMock, 'GET', '/api/v1/disputes').map((request) =>
-      new URL(request.url).searchParams.get('State'),
+      new URL(request.url).searchParams.get('state'),
     );
     expect(states.sort()).toEqual(['Completed', 'Pending']);
   });
@@ -109,7 +109,7 @@ describe('dispute history', () => {
       at: '/disputes',
       api: {
         [LIST]: (request: Request) =>
-          new URL(request.url).searchParams.get('State') === 'Pending'
+          new URL(request.url).searchParams.get('state') === 'Pending'
             ? problemResponse(500, 'internal_error', 'Something broke on our side.')
             : jsonResponse(paged([])),
       },
