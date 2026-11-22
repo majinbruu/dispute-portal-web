@@ -18,10 +18,11 @@ const REASONS = 'GET /api/v1/dispute-reasons';
 const SUBMIT = 'POST /api/v1/disputes';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
+// Stubs come first so they win over the real dispute screens, which have their own tests.
 const routes: RouteObject[] = [
-  ...disputeRoutes,
   { path: 'disputes/:id', element: <p>Dispute progress screen</p> },
   { path: 'debit-orders/:id', element: <p>Debit order screen</p> },
+  ...disputeRoutes,
 ];
 
 type SubmitHandler = (request: Request) => Response | Promise<Response>;
