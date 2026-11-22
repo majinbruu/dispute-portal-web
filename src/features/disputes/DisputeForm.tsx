@@ -72,7 +72,7 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>('details');
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const isFirstRender = useRef(true);
+  const previousStep = useRef(step);
   const idempotencyKeyFor = useIdempotencyKey();
   const submit = useSubmitDispute();
 
@@ -90,12 +90,11 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
 
   useEffect(() => {
     // Moving between steps replaces the content, so move focus to the new step's heading for
-    // keyboard and screen reader users. Not on first render: the page heading comes first.
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
+    // keyboard and screen reader users. Not on mount: the page heading comes first.
+    if (previousStep.current !== step) {
+      previousStep.current = step;
+      headingRef.current?.focus();
     }
-    headingRef.current?.focus();
   }, [step]);
 
   const onSubmit = () => {

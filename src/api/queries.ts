@@ -79,13 +79,13 @@ export function useMandate(id: string) {
   });
 }
 
-export function useDisputeReasons(mandateType: MandateType | undefined) {
+/** Reasons the customer may choose for a debit order collected under this type of mandate. */
+export function useDisputeReasons(mandateType: MandateType) {
   const api = useApiClient();
   return useQuery({
-    queryKey: queryKeys.disputeReasons(mandateType ?? 'Registered'),
+    queryKey: queryKeys.disputeReasons(mandateType),
     queryFn: ({ signal }) =>
       unwrap(api.GET('/api/v1/dispute-reasons', { params: { query: { mandateType } }, signal })),
-    enabled: mandateType !== undefined,
     staleTime: REFERENCE_DATA_STALE_MS,
   });
 }

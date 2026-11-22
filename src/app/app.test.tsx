@@ -61,6 +61,18 @@ describe('AppLayout', () => {
 });
 
 describe('routing', () => {
+  it('moves focus to the main content after a client-side navigation', async () => {
+    const { user } = renderApp({ routes, at: '/nowhere' });
+    expect(screen.getByRole('main')).not.toHaveFocus();
+
+    await user.click(screen.getByRole('link', { name: 'Mandates' }));
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Debit order mandates' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('main')).toHaveFocus();
+  });
+
   it('shows a not-found page for unknown routes', () => {
     renderApp({ routes, at: '/does-not-exist' });
 

@@ -1,4 +1,5 @@
-import { Link, NavLink, Outlet, ScrollRestoration } from 'react-router';
+import { useEffect, useRef } from 'react';
+import { Link, NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router';
 import { useUnreadCount } from '../api/queries';
 import { useSession } from '../auth/useSession';
 import styles from './AppLayout.module.css';
@@ -34,9 +35,29 @@ function InboxLink() {
   );
 }
 
+/**
+ * A client-side navigation does not move focus the way a page load does, so keyboard and screen
+ * reader users would be left on the link they activated. Move focus to the new screen instead.
+ */
+function useFocusOnNavigation() {
+  const { pathname } = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+  const previousPath = useRef(pathname);
+
+  useEffect(() => {
+    if (previousPath.current !== pathname) {
+      previousPath.current = pathname;
+      mainRef.current?.focus({ preventScroll: true });
+    }
+  }, [pathname]);
+
+  return mainRef;
+}
+
 /** The signed-in shell: header with navigation, inbox badge and account controls. */
 export function AppLayout() {
   const { displayName, signOut } = useSession();
+  const mainRef = useFocusOnNavigation();
 
   return (
     <div className={styles.shell}>
@@ -67,7 +88,7 @@ export function AppLayout() {
           </div>
         </div>
       </header>
-      <main id="main" className={styles.main} tabIndex={-1}>
+      <main id="main" ref={mainRef} className={styles.main} tabIndex={-1}>
         <Outlet />
       </main>
       <footer className={styles.footer}>
