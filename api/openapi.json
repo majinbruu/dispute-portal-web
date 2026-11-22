@@ -1,0 +1,1519 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "ACME Bank Dispute Portal API",
+    "description": "Debit orders, mandates, disputes and notifications for the signed-in customer. All endpoints under /api require a Keycloak access token with the 'customer' role. Errors are RFC 9457 problem documents with a stable 'code' and a 'traceId'.",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/debit-orders": {
+      "get": {
+        "tags": [
+          "Debit orders"
+        ],
+        "summary": "Lists the customer's debit orders, newest first, with whether each can be disputed.",
+        "operationId": "ListDebitOrders",
+        "parameters": [
+          {
+            "name": "Status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DebitOrderStatus"
+            }
+          },
+          {
+            "name": "MandateType",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/MandateType"
+            }
+          },
+          {
+            "name": "From",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "To",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfDebitOrderDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/debit-orders/{id}": {
+      "get": {
+        "tags": [
+          "Debit orders"
+        ],
+        "summary": "Returns one debit order with its dispute eligibility.",
+        "operationId": "GetDebitOrder",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebitOrderDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mandates": {
+      "get": {
+        "tags": [
+          "Mandates"
+        ],
+        "summary": "Lists the customer's debit order mandates, optionally by type.",
+        "operationId": "ListMandates",
+        "parameters": [
+          {
+            "name": "Type",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/MandateType"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfMandateDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mandates/{id}": {
+      "get": {
+        "tags": [
+          "Mandates"
+        ],
+        "summary": "Returns one mandate.",
+        "operationId": "GetMandate",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MandateDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/disputes": {
+      "post": {
+        "tags": [
+          "Disputes"
+        ],
+        "summary": "Raises a dispute against a debit order. Requires an Idempotency-Key header, which makes retries safe.",
+        "operationId": "SubmitDispute",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitDisputeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeDetailDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Disputes"
+        ],
+        "summary": "Lists the customer's disputes, newest first. Filter by state to get pending or completed disputes.",
+        "operationId": "ListDisputes",
+        "parameters": [
+          {
+            "name": "State",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DisputeState"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfDisputeSummaryDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/disputes/{id}": {
+      "get": {
+        "tags": [
+          "Disputes"
+        ],
+        "summary": "Returns one dispute with its progress timeline.",
+        "operationId": "GetDispute",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeDetailDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/dispute-reasons": {
+      "get": {
+        "tags": [
+          "Disputes"
+        ],
+        "summary": "Lists the dispute reasons a customer can choose, optionally only those allowed for a mandate type.",
+        "operationId": "ListDisputeReasons",
+        "parameters": [
+          {
+            "name": "mandateType",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/MandateKind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DisputeReasonDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Lists the customer's inbox, newest first.",
+        "operationId": "ListNotifications",
+        "parameters": [
+          {
+            "name": "UnreadOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfNotificationDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/unread-count": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Returns how many notifications the customer has not read.",
+        "operationId": "GetUnreadNotificationCount",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnreadCountDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/{id}/read": {
+      "post": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Marks a notification as read. Safe to repeat.",
+        "operationId": "MarkNotificationRead",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CollectionFrequency": {
+        "enum": [
+          "Weekly",
+          "Fortnightly",
+          "Monthly",
+          "Quarterly",
+          "Annually"
+        ]
+      },
+      "DebitOrderDto": {
+        "required": [
+          "id",
+          "transactionId",
+          "endToEndId",
+          "creditorName",
+          "creditorShortName",
+          "statementText",
+          "amount",
+          "currency",
+          "actionDate",
+          "sequenceType",
+          "status",
+          "statusReasonCode",
+          "statusReason",
+          "debtorAccountMasked",
+          "mandateId",
+          "mandateType",
+          "mandateReference",
+          "eligibility",
+          "dispute"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "transactionId": {
+            "type": "string"
+          },
+          "endToEndId": {
+            "type": "string"
+          },
+          "creditorName": {
+            "type": "string"
+          },
+          "creditorShortName": {
+            "type": "string"
+          },
+          "statementText": {
+            "type": "string"
+          },
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "actionDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "sequenceType": {
+            "$ref": "#/components/schemas/SequenceType"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DebitOrderStatus"
+          },
+          "statusReasonCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "statusReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "debtorAccountMasked": {
+            "type": "string"
+          },
+          "mandateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mandateType": {
+            "$ref": "#/components/schemas/MandateType"
+          },
+          "mandateReference": {
+            "type": "string"
+          },
+          "eligibility": {
+            "$ref": "#/components/schemas/DisputeEligibilityDto"
+          },
+          "dispute": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DisputeLinkDto"
+              }
+            ]
+          }
+        }
+      },
+      "DebitOrderStatus": {
+        "enum": [
+          "Successful",
+          "Failed"
+        ]
+      },
+      "DisputeDetailDto": {
+        "required": [
+          "id",
+          "reference",
+          "debitOrderId",
+          "originalTransactionId",
+          "creditorName",
+          "mandateType",
+          "mandateReference",
+          "amount",
+          "currency",
+          "actionDate",
+          "reasonCode",
+          "reasonDescription",
+          "comment",
+          "status",
+          "state",
+          "submittedAt",
+          "completedAt",
+          "outcomeNote",
+          "events"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "debitOrderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "originalTransactionId": {
+            "type": "string"
+          },
+          "creditorName": {
+            "type": "string"
+          },
+          "mandateType": {
+            "type": "string"
+          },
+          "mandateReference": {
+            "type": "string"
+          },
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "actionDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "reasonDescription": {
+            "type": "string"
+          },
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/DisputeStatus"
+          },
+          "state": {
+            "$ref": "#/components/schemas/DisputeState"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "outcomeNote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DisputeEventDto"
+            }
+          }
+        }
+      },
+      "DisputeEligibility": {
+        "enum": [
+          "Eligible",
+          "WithinMandateTerms",
+          "CollectionFailed",
+          "DisputeWindowClosed",
+          "AlreadyDisputed"
+        ]
+      },
+      "DisputeEligibilityDto": {
+        "required": [
+          "canDispute",
+          "code",
+          "message",
+          "lastDisputeDate"
+        ],
+        "type": "object",
+        "properties": {
+          "canDispute": {
+            "type": "boolean"
+          },
+          "code": {
+            "$ref": "#/components/schemas/DisputeEligibility"
+          },
+          "message": {
+            "type": "string"
+          },
+          "lastDisputeDate": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      },
+      "DisputeEventDto": {
+        "required": [
+          "status",
+          "description",
+          "occurredAt"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/DisputeStatus"
+          },
+          "description": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DisputeLinkDto": {
+        "required": [
+          "id",
+          "reference",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "DisputeReasonDto": {
+        "required": [
+          "code",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "DisputeState": {
+        "enum": [
+          "Pending",
+          "Completed"
+        ]
+      },
+      "DisputeStatus": {
+        "enum": [
+          "Submitted",
+          "SentToScheme",
+          "Refunded",
+          "Declined"
+        ]
+      },
+      "DisputeSummaryDto": {
+        "required": [
+          "id",
+          "reference",
+          "debitOrderId",
+          "creditorName",
+          "amount",
+          "currency",
+          "actionDate",
+          "reasonCode",
+          "reasonDescription",
+          "status",
+          "state",
+          "submittedAt",
+          "completedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "debitOrderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "creditorName": {
+            "type": "string"
+          },
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "actionDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "reasonDescription": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/DisputeStatus"
+          },
+          "state": {
+            "$ref": "#/components/schemas/DisputeState"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "completedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "HttpValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "MandateDto": {
+        "required": [
+          "id",
+          "mandateReference",
+          "contractReference",
+          "type",
+          "creditorName",
+          "creditorShortName",
+          "instalmentAmount",
+          "maximumCollectionAmount",
+          "currency",
+          "frequency",
+          "collectionDay",
+          "firstCollectionDate",
+          "dateAdjustmentAllowed",
+          "trackingEnabled",
+          "authenticationType",
+          "authenticatedAt",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mandateReference": {
+            "type": "string"
+          },
+          "contractReference": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/MandateType"
+          },
+          "creditorName": {
+            "type": "string"
+          },
+          "creditorShortName": {
+            "type": "string"
+          },
+          "instalmentAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "maximumCollectionAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "frequency": {
+            "$ref": "#/components/schemas/CollectionFrequency"
+          },
+          "collectionDay": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "firstCollectionDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "dateAdjustmentAllowed": {
+            "type": "boolean"
+          },
+          "trackingEnabled": {
+            "type": "boolean"
+          },
+          "authenticationType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "authenticatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MandateStatus"
+          }
+        }
+      },
+      "MandateKind": {
+        "enum": [
+          "DebiCheck",
+          "Registered",
+          null
+        ]
+      },
+      "MandateStatus": {
+        "enum": [
+          "Active",
+          "Suspended",
+          "Cancelled",
+          "Expired"
+        ]
+      },
+      "MandateType": {
+        "enum": [
+          "DebiCheck",
+          "Registered"
+        ]
+      },
+      "NotificationCategory": {
+        "enum": [
+          "DisputeReceived",
+          "DisputeInProgress",
+          "DisputeRefunded",
+          "DisputeDeclined"
+        ]
+      },
+      "NotificationDto": {
+        "required": [
+          "id",
+          "category",
+          "title",
+          "body",
+          "relatedDisputeId",
+          "createdAt",
+          "isRead"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category": {
+            "$ref": "#/components/schemas/NotificationCategory"
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "relatedDisputeId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isRead": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PagedResultOfDebitOrderDto": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DebitOrderDto"
+            }
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalItems": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPages": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResultOfDisputeSummaryDto": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DisputeSummaryDto"
+            }
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalItems": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPages": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResultOfMandateDto": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MandateDto"
+            }
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalItems": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPages": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResultOfNotificationDto": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "totalItems"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationDto"
+            }
+          },
+          "page": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalItems": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPages": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SequenceType": {
+        "enum": [
+          "First",
+          "Recurring",
+          "Final",
+          "OnceOff"
+        ]
+      },
+      "SubmitDisputeRequest": {
+        "required": [
+          "debitOrderId",
+          "reasonCode",
+          "comment"
+        ],
+        "type": "object",
+        "properties": {
+          "debitOrderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reasonCode": {
+            "type": "string"
+          },
+          "comment": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UnreadCountDto": {
+        "required": [
+          "unread"
+        ],
+        "type": "object",
+        "properties": {
+          "unread": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Debit orders"
+    },
+    {
+      "name": "Mandates"
+    },
+    {
+      "name": "Disputes"
+    },
+    {
+      "name": "Notifications"
+    }
+  ]
+}
