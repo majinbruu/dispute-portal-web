@@ -11,7 +11,7 @@ import {
 export const DEBIT_ORDER_PAGE_SIZE = 10;
 export const DEFAULT_SORT: DebitOrderSort = '-actionDate';
 
-const STATUSES: readonly DebitOrderStatus[] = ['Successful', 'Failed'];
+const STATUSES: readonly DebitOrderStatus[] = ['Accepted', 'Rejected'];
 const MANDATE_TYPES: readonly MandateType[] = ['DebiCheck', 'Registered'];
 
 function oneOf<T extends string>(allowed: readonly T[], value: string | null): T | undefined {

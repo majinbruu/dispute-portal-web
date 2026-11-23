@@ -26,12 +26,12 @@ describe('createApiClient', () => {
     const { client, sentRequest } = setup(() => jsonResponse({ unread: 3 }));
 
     await client.GET('/api/v1/debit-orders', {
-      params: { query: { status: 'Failed', page: 2, pageSize: 10 } },
+      params: { query: { status: 'Rejected', page: 2, pageSize: 10 } },
     });
 
     const request = sentRequest();
     expect(request.url).toBe(
-      'http://api.test/api/v1/debit-orders?status=Failed&page=2&pageSize=10',
+      'http://api.test/api/v1/debit-orders?status=Rejected&page=2&pageSize=10',
     );
     expect(request.headers.get('Authorization')).toBe('Bearer tok');
     expect(request.headers.get('Accept')).toContain('application/problem+json');
@@ -98,7 +98,7 @@ describe('unwrap', () => {
 
     const error = await unwrap(
       client.POST('/api/v1/disputes', {
-        body: { debitOrderId: 'd1', reasonCode: 'R1', comment: null },
+        body: { debitOrderId: 'd1', reasonCode: 'R1' },
         params: { header: { 'Idempotency-Key': 'key-1' } },
       }),
     ).catch((caught: unknown) => caught);

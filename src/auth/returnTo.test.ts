@@ -21,8 +21,8 @@ describe('sanitizeReturnTo', () => {
 
 describe('currentReturnTo', () => {
   it('keeps the path and unrelated query parameters', () => {
-    expect(currentReturnTo({ pathname: '/debit-orders', search: '?status=Failed&page=2' })).toBe(
-      '/debit-orders?status=Failed&page=2',
+    expect(currentReturnTo({ pathname: '/debit-orders', search: '?status=Rejected&page=2' })).toBe(
+      '/debit-orders?status=Rejected&page=2',
     );
   });
 

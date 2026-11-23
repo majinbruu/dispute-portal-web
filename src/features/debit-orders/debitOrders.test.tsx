@@ -10,16 +10,16 @@ const LIST = 'GET /api/v1/debit-orders';
 const DETAIL = `GET /api/v1/debit-orders/${DEBIT_ORDER_ID}`;
 
 const ineligible = debitOrder({
-  id: 'failed-1',
+  id: 'rejected-1',
   creditorName: 'SureCover Insurance',
   statementText: 'SURECOVER PREMIUM',
   amount: '1250.50',
-  status: 'Failed',
+  status: 'Rejected',
   mandateType: 'Registered',
   eligibility: {
     canDispute: false,
-    code: 'CollectionFailed',
-    message: 'This collection failed, so no money left your account.',
+    code: 'CollectionRejected',
+    message: 'This collection was rejected, so no money left your account.',
     lastDisputeDate: '2026-04-09',
   },
 });
@@ -43,12 +43,12 @@ describe('debit order list', () => {
     expect(first).toHaveTextContent('FITLIFE GYM MEMBERSHIP');
     expect(first).toHaveTextContent(/R\s499,00/);
     expect(first).toHaveTextContent('01 Mar 2026');
-    expect(first).toHaveTextContent('Successful');
+    expect(first).toHaveTextContent('Accepted');
     expect(first).toHaveTextContent('DebiCheck');
     expect(first).toHaveTextContent('Can be disputed');
 
     expect(second).toHaveTextContent(/R\s1\s250,50/);
-    expect(second).toHaveTextContent('Failed');
+    expect(second).toHaveTextContent('Rejected');
     expect(second).toHaveTextContent('Registered');
     expect(second).toHaveTextContent('Nothing to dispute');
     expect(screen.getByText('2 debit orders')).toBeInTheDocument();
@@ -118,20 +118,22 @@ describe('debit order list', () => {
       pageSize: '10',
     });
 
-    await user.selectOptions(screen.getByLabelText('Status'), 'Failed');
+    await user.selectOptions(screen.getByLabelText('Status'), 'Rejected');
     await user.selectOptions(screen.getByLabelText('Mandate type'), 'DebiCheck');
     await user.selectOptions(screen.getByLabelText('Sort by'), '-amount');
 
     await waitFor(() => {
       expect(Object.fromEntries(lastQuery())).toEqual({
-        status: 'Failed',
+        status: 'Rejected',
         mandateType: 'DebiCheck',
         sort: '-amount',
         page: '1',
         pageSize: '10',
       });
     });
-    expect(router.state.location.search).toBe('?status=Failed&mandateType=DebiCheck&sort=-amount');
+    expect(router.state.location.search).toBe(
+      '?status=Rejected&mandateType=DebiCheck&sort=-amount',
+    );
 
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await waitFor(() => {
@@ -142,7 +144,7 @@ describe('debit order list', () => {
   it('offers to clear filters when nothing matches', async () => {
     const { user, router } = renderApp({
       routes: debitOrderRoutes,
-      at: '/debit-orders?status=Failed',
+      at: '/debit-orders?status=Rejected',
       api: { [LIST]: paged([]) },
     });
 
@@ -219,7 +221,7 @@ describe('debit order detail', () => {
     });
 
     expect(
-      await screen.findByText('This collection failed, so no money left your account.'),
+      await screen.findByText('This collection was rejected, so no money left your account.'),
     ).toBeInTheDocument();
     expect(screen.getByText('Insufficient funds')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Dispute this debit order' })).toBeNull();

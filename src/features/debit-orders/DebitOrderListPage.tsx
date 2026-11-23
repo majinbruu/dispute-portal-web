@@ -39,8 +39,8 @@ function Filters({ filters, setFilter }: Pick<DebitOrderFilterState, 'filters' |
           }}
         >
           <option value="">All statuses</option>
-          <option value="Successful">Successful</option>
-          <option value="Failed">Failed</option>
+          <option value="Accepted">Accepted</option>
+          <option value="Rejected">Rejected</option>
         </select>
       </div>
       <div className={styles.field}>

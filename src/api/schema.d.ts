@@ -207,7 +207,7 @@ export interface components {
       dispute: null | components['schemas']['DisputeLinkDto'];
     };
     /** @enum {unknown} */
-    DebitOrderStatus: 'Successful' | 'Failed';
+    DebitOrderStatus: 'Accepted' | 'Rejected';
     DisputeDetailDto: {
       /** Format: uuid */
       id: string;
@@ -225,7 +225,6 @@ export interface components {
       actionDate: string;
       reasonCode: string;
       reasonDescription: string;
-      comment: null | string;
       status: components['schemas']['DisputeStatus'];
       state: components['schemas']['DisputeState'];
       /** Format: date-time */
@@ -239,7 +238,7 @@ export interface components {
     DisputeEligibility:
       | 'Eligible'
       | 'WithinMandateTerms'
-      | 'CollectionFailed'
+      | 'CollectionRejected'
       | 'DisputeWindowClosed'
       | 'AlreadyDisputed';
     DisputeEligibilityDto: {
@@ -405,7 +404,6 @@ export interface components {
       /** Format: uuid */
       debitOrderId: string;
       reasonCode: string;
-      comment: null | string;
     };
     UnreadCountDto: {
       /** Format: int32 */

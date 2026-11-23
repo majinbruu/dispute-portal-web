@@ -23,8 +23,8 @@ const BY_CODE: Record<string, SubmitErrorView> = {
     message: 'This debit order was collected within the terms of your mandate',
     action: 'viewDebitOrder',
   },
-  collection_failed: {
-    message: 'This collection failed, so there is nothing to dispute',
+  collection_rejected: {
+    message: 'This collection was rejected, so there is nothing to dispute',
     action: 'viewDebitOrder',
   },
   reason_not_allowed: {

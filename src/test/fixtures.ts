@@ -24,7 +24,7 @@ export function debitOrder(overrides: Partial<DebitOrder> = {}): DebitOrder {
     currency: 'ZAR',
     actionDate: '2026-03-01',
     sequenceType: 'Recurring',
-    status: 'Successful',
+    status: 'Accepted',
     statusReasonCode: null,
     statusReason: null,
     debtorAccountMasked: '******4321',
@@ -96,7 +96,6 @@ export function disputeDetail(overrides: Partial<DisputeDetail> = {}): DisputeDe
     originalTransactionId: 'TXN-20260301-0001',
     mandateType: 'DebiCheck',
     mandateReference: 'MND-0001',
-    comment: null,
     outcomeNote: null,
     events: [
       {

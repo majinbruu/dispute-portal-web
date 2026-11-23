@@ -28,7 +28,7 @@ interface DisputeFormProps {
 }
 
 function toRequest(order: DebitOrder, values: DisputeFormValues): SubmitDisputeRequest {
-  return { debitOrderId: order.id, reasonCode: values.reasonCode, comment: null };
+  return { debitOrderId: order.id, reasonCode: values.reasonCode };
 }
 
 interface SubmitErrorProps {

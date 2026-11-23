@@ -8,8 +8,8 @@ export interface BadgeView {
 }
 
 export const STATUS_TONE: Record<DebitOrderStatus, BadgeTone> = {
-  Successful: 'success',
-  Failed: 'danger',
+  Accepted: 'success',
+  Rejected: 'danger',
 };
 
 export const MANDATE_TYPE_LABEL: Record<MandateType, string> = {
@@ -27,7 +27,7 @@ export const SORT_LABEL: Record<DebitOrderSort, string> = {
 const INELIGIBLE_LABEL: Record<DebitOrder['eligibility']['code'], string> = {
   Eligible: 'Can be disputed',
   WithinMandateTerms: 'Within mandate terms',
-  CollectionFailed: 'Nothing to dispute',
+  CollectionRejected: 'Nothing to dispute',
   DisputeWindowClosed: 'Dispute window closed',
   AlreadyDisputed: 'Disputed',
 };

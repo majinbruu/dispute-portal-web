@@ -720,8 +720,8 @@
       },
       "DebitOrderStatus": {
         "enum": [
-          "Successful",
-          "Failed"
+          "Accepted",
+          "Rejected"
         ]
       },
       "DisputeDetailDto": {
@@ -738,7 +738,6 @@
           "actionDate",
           "reasonCode",
           "reasonDescription",
-          "comment",
           "status",
           "state",
           "submittedAt",
@@ -792,12 +791,6 @@
           "reasonDescription": {
             "type": "string"
           },
-          "comment": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
           "status": {
             "$ref": "#/components/schemas/DisputeStatus"
           },
@@ -833,7 +826,7 @@
         "enum": [
           "Eligible",
           "WithinMandateTerms",
-          "CollectionFailed",
+          "CollectionRejected",
           "DisputeWindowClosed",
           "AlreadyDisputed"
         ]
@@ -1464,8 +1457,7 @@
       "SubmitDisputeRequest": {
         "required": [
           "debitOrderId",
-          "reasonCode",
-          "comment"
+          "reasonCode"
         ],
         "type": "object",
         "properties": {
@@ -1475,12 +1467,6 @@
           },
           "reasonCode": {
             "type": "string"
-          },
-          "comment": {
-            "type": [
-              "null",
-              "string"
-            ]
           }
         }
       },

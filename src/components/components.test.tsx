@@ -72,7 +72,7 @@ describe('ItemList', () => {
             subtitle="GYMCO 123"
             value="R 499,00"
             meta="01 Mar 2026"
-            badges={<Badge tone="success">Successful</Badge>}
+            badges={<Badge tone="success">Accepted</Badge>}
           />
           <ItemRow to="/debit-orders/2" title="Insurer" />
         </ItemList>
@@ -89,7 +89,7 @@ describe('ItemList', () => {
     expect(first).toHaveTextContent('GYMCO 123');
     expect(first).toHaveTextContent('R 499,00');
     expect(first).toHaveTextContent('01 Mar 2026');
-    expect(first).toHaveTextContent('Successful');
+    expect(first).toHaveTextContent('Accepted');
     expect(within(rows[1]!).getByRole('link')).toHaveTextContent('Insurer');
   });
 });

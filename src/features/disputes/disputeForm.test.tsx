@@ -115,7 +115,6 @@ describe('dispute form', () => {
     expect(await request!.clone().json()).toEqual({
       debitOrderId: DEBIT_ORDER_ID,
       reasonCode: 'NOT_AUTHORISED',
-      comment: null,
     });
   });
 
@@ -196,7 +195,7 @@ describe('dispute form', () => {
         'within_mandate_terms',
         'This debit order was collected within the terms of your mandate',
       ],
-      [422, 'collection_failed', 'This collection failed, so there is nothing to dispute'],
+      [422, 'collection_rejected', 'This collection was rejected, so there is nothing to dispute'],
       [422, 'reason_not_allowed', 'That reason cannot be used for this debit order'],
       [409, 'idempotency_key_reused', 'Your dispute may already have been submitted'],
       [400, 'validation_failed', 'Some of the details you entered are not valid'],
