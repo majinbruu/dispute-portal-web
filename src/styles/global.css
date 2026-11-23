@@ -38,6 +38,7 @@ legend {
 h1,
 h2,
 h3 {
+  color: var(--color-heading);
   line-height: var(--line-height-tight);
   font-weight: var(--font-weight-bold);
 }

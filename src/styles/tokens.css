@@ -1,23 +1,27 @@
 /*
  * Design tokens. Every colour, space and radius used by a CSS Module comes from here, so the
- * brand can be changed in one place. The palette is ACME Bank's own: deep teal on warm neutrals.
+ * look can be changed in one place. The scheme is white surfaces, royal blue actions, deep blue
+ * headings and a small red accent. Contrast notes are WCAG 2 ratios against white.
  */
 :root {
   /* Colour: surfaces and text */
-  --color-bg: #f4f5f3;
+  --color-bg: #ffffff;
   --color-surface: #ffffff;
-  --color-surface-muted: #eef0ee;
-  --color-text: #1b2422;
-  --color-text-muted: #51605c;
-  --color-border: #d5dbd8;
-  --color-border-strong: #9aa6a2;
+  --color-surface-muted: #f5f5f5;
+  --color-text: #1a1a1a; /* 17.4:1 */
+  --color-text-muted: #595959; /* 7.0:1, and 6.4:1 on the muted surface */
+  --color-border: #dcdcdc;
+  --color-border-strong: #8c8c8c; /* 3.4:1, for control outlines */
 
   /* Colour: brand */
-  --color-primary: #14504b;
-  --color-primary-hover: #0d3a36;
+  --color-primary: #1f62e0; /* 5.4:1 with white, both ways */
+  --color-primary-hover: #174fbd;
   --color-primary-contrast: #ffffff;
-  --color-primary-soft: #e0eeeb;
-  --color-focus: #c2570c;
+  --color-primary-soft: #e8f0fd;
+  --color-heading: #0033a0; /* 10.6:1 */
+  --color-accent: #e31837; /* 4.7:1 with white text; used sparingly */
+  --color-accent-contrast: #ffffff;
+  --color-focus: #1f62e0;
 
   /* Colour: status (each pair meets WCAG AA for text on its soft background) */
   --color-success: #1a6238;
