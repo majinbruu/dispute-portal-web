@@ -80,7 +80,17 @@
           "200": {
             "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfDebitOrderDto"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfDebitOrderDto"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PagedResultOfDebitOrderDto"
                 }
@@ -90,9 +100,19 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem+json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
                 }
               }
             }
@@ -122,7 +142,17 @@
           "200": {
             "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebitOrderDto"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebitOrderDto"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DebitOrderDto"
                 }
@@ -132,7 +162,17 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem+json": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -186,7 +226,17 @@
           "200": {
             "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfMandateDto"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfMandateDto"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PagedResultOfMandateDto"
                 }
@@ -196,9 +246,19 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem+json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
                 }
               }
             }
@@ -228,7 +288,17 @@
           "200": {
             "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MandateDto"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MandateDto"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MandateDto"
                 }
@@ -238,7 +308,17 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem+json": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -270,6 +350,16 @@
               "schema": {
                 "$ref": "#/components/schemas/SubmitDisputeRequest"
               }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitDisputeRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitDisputeRequest"
+              }
             }
           },
           "required": true
@@ -278,7 +368,17 @@
           "201": {
             "description": "Created",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeDetailDto"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeDetailDto"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DisputeDetailDto"
                 }
@@ -288,9 +388,19 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem+json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
                 }
               }
             }
@@ -298,7 +408,17 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem+json": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -308,7 +428,17 @@
           "409": {
             "description": "Conflict",
             "content": {
-              "application/problem+json": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -318,7 +448,17 @@
           "422": {
             "description": "Unprocessable Entity",
             "content": {
-              "application/problem+json": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -328,7 +468,17 @@
           "429": {
             "description": "Too Many Requests",
             "content": {
-              "application/problem+json": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -380,7 +530,17 @@
           "200": {
             "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfDisputeSummaryDto"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfDisputeSummaryDto"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PagedResultOfDisputeSummaryDto"
                 }
@@ -390,9 +550,19 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem+json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
                 }
               }
             }
@@ -422,7 +592,17 @@
           "200": {
             "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeDetailDto"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisputeDetailDto"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DisputeDetailDto"
                 }
@@ -432,7 +612,17 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem+json": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -462,7 +652,23 @@
           "200": {
             "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DisputeReasonDto"
+                  }
+                }
+              },
               "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DisputeReasonDto"
+                  }
+                }
+              },
+              "text/json": {
                 "schema": {
                   "type": "array",
                   "items": {
@@ -519,7 +725,17 @@
           "200": {
             "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfNotificationDto"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfNotificationDto"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PagedResultOfNotificationDto"
                 }
@@ -529,9 +745,19 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem+json": {
+              "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
                 }
               }
             }
@@ -550,7 +776,17 @@
           "200": {
             "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnreadCountDto"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnreadCountDto"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UnreadCountDto"
                 }
@@ -582,7 +818,17 @@
           "200": {
             "description": "OK",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationDto"
+                }
+              },
               "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationDto"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/NotificationDto"
                 }
@@ -592,7 +838,17 @@
           "404": {
             "description": "Not Found",
             "content": {
-              "application/problem+json": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -993,53 +1249,6 @@
               "string"
             ],
             "format": "date-time"
-          }
-        }
-      },
-      "HttpValidationProblemDetails": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "title": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "status": {
-            "pattern": "^-?(?:0|[1-9]\\d*)$",
-            "type": [
-              "null",
-              "integer",
-              "string"
-            ],
-            "format": "int32"
-          },
-          "detail": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "instance": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "errors": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
           }
         }
       },
@@ -1485,9 +1694,69 @@
             "format": "int32"
           }
         }
+      },
+      "ValidationProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "description": "A Keycloak access token for a user with the 'customer' role.",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   },
+  "security": [
+    {
+      "bearer": [ ]
+    }
+  ],
   "tags": [
     {
       "name": "Debit orders"

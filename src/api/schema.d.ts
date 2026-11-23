@@ -289,17 +289,6 @@ export interface components {
       /** Format: date-time */
       completedAt: null | string;
     };
-    HttpValidationProblemDetails: {
-      type?: null | string;
-      title?: null | string;
-      /** Format: int32 */
-      status?: null | number | string;
-      detail?: null | string;
-      instance?: null | string;
-      errors?: {
-        [key: string]: string[];
-      };
-    };
     MandateDto: {
       /** Format: uuid */
       id: string;
@@ -409,6 +398,17 @@ export interface components {
       /** Format: int32 */
       unread: number | string;
     };
+    ValidationProblemDetails: {
+      type?: null | string;
+      title?: null | string;
+      /** Format: int32 */
+      status?: null | number | string;
+      detail?: null | string;
+      instance?: null | string;
+      errors?: {
+        [key: string]: string[];
+      };
+    };
   };
   responses: never;
   parameters: never;
@@ -441,7 +441,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          'text/plain': components['schemas']['PagedResultOfDebitOrderDto'];
           'application/json': components['schemas']['PagedResultOfDebitOrderDto'];
+          'text/json': components['schemas']['PagedResultOfDebitOrderDto'];
         };
       };
       /** @description Bad Request */
@@ -450,7 +452,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/problem+json': components['schemas']['HttpValidationProblemDetails'];
+          'text/plain': components['schemas']['ValidationProblemDetails'];
+          'application/json': components['schemas']['ValidationProblemDetails'];
+          'text/json': components['schemas']['ValidationProblemDetails'];
         };
       };
     };
@@ -472,7 +476,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          'text/plain': components['schemas']['DebitOrderDto'];
           'application/json': components['schemas']['DebitOrderDto'];
+          'text/json': components['schemas']['DebitOrderDto'];
         };
       };
       /** @description Not Found */
@@ -481,7 +487,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/problem+json': components['schemas']['ProblemDetails'];
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
         };
       };
     };
@@ -505,7 +513,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          'text/plain': components['schemas']['PagedResultOfMandateDto'];
           'application/json': components['schemas']['PagedResultOfMandateDto'];
+          'text/json': components['schemas']['PagedResultOfMandateDto'];
         };
       };
       /** @description Bad Request */
@@ -514,7 +524,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/problem+json': components['schemas']['HttpValidationProblemDetails'];
+          'text/plain': components['schemas']['ValidationProblemDetails'];
+          'application/json': components['schemas']['ValidationProblemDetails'];
+          'text/json': components['schemas']['ValidationProblemDetails'];
         };
       };
     };
@@ -536,7 +548,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          'text/plain': components['schemas']['MandateDto'];
           'application/json': components['schemas']['MandateDto'];
+          'text/json': components['schemas']['MandateDto'];
         };
       };
       /** @description Not Found */
@@ -545,7 +559,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/problem+json': components['schemas']['ProblemDetails'];
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
         };
       };
     };
@@ -569,7 +585,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          'text/plain': components['schemas']['PagedResultOfDisputeSummaryDto'];
           'application/json': components['schemas']['PagedResultOfDisputeSummaryDto'];
+          'text/json': components['schemas']['PagedResultOfDisputeSummaryDto'];
         };
       };
       /** @description Bad Request */
@@ -578,7 +596,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/problem+json': components['schemas']['HttpValidationProblemDetails'];
+          'text/plain': components['schemas']['ValidationProblemDetails'];
+          'application/json': components['schemas']['ValidationProblemDetails'];
+          'text/json': components['schemas']['ValidationProblemDetails'];
         };
       };
     };
@@ -595,6 +615,8 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['SubmitDisputeRequest'];
+        'text/json': components['schemas']['SubmitDisputeRequest'];
+        'application/*+json': components['schemas']['SubmitDisputeRequest'];
       };
     };
     responses: {
@@ -604,7 +626,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          'text/plain': components['schemas']['DisputeDetailDto'];
           'application/json': components['schemas']['DisputeDetailDto'];
+          'text/json': components['schemas']['DisputeDetailDto'];
         };
       };
       /** @description Bad Request */
@@ -613,7 +637,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/problem+json': components['schemas']['HttpValidationProblemDetails'];
+          'text/plain': components['schemas']['ValidationProblemDetails'];
+          'application/json': components['schemas']['ValidationProblemDetails'];
+          'text/json': components['schemas']['ValidationProblemDetails'];
         };
       };
       /** @description Not Found */
@@ -622,7 +648,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/problem+json': components['schemas']['ProblemDetails'];
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
         };
       };
       /** @description Conflict */
@@ -631,7 +659,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/problem+json': components['schemas']['ProblemDetails'];
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
         };
       };
       /** @description Unprocessable Entity */
@@ -640,7 +670,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/problem+json': components['schemas']['ProblemDetails'];
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
         };
       };
       /** @description Too Many Requests */
@@ -649,7 +681,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/problem+json': components['schemas']['ProblemDetails'];
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
         };
       };
     };
@@ -671,7 +705,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          'text/plain': components['schemas']['DisputeDetailDto'];
           'application/json': components['schemas']['DisputeDetailDto'];
+          'text/json': components['schemas']['DisputeDetailDto'];
         };
       };
       /** @description Not Found */
@@ -680,7 +716,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/problem+json': components['schemas']['ProblemDetails'];
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
         };
       };
     };
@@ -702,7 +740,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          'text/plain': components['schemas']['DisputeReasonDto'][];
           'application/json': components['schemas']['DisputeReasonDto'][];
+          'text/json': components['schemas']['DisputeReasonDto'][];
         };
       };
     };
@@ -726,7 +766,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          'text/plain': components['schemas']['PagedResultOfNotificationDto'];
           'application/json': components['schemas']['PagedResultOfNotificationDto'];
+          'text/json': components['schemas']['PagedResultOfNotificationDto'];
         };
       };
       /** @description Bad Request */
@@ -735,7 +777,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/problem+json': components['schemas']['HttpValidationProblemDetails'];
+          'text/plain': components['schemas']['ValidationProblemDetails'];
+          'application/json': components['schemas']['ValidationProblemDetails'];
+          'text/json': components['schemas']['ValidationProblemDetails'];
         };
       };
     };
@@ -755,7 +799,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          'text/plain': components['schemas']['UnreadCountDto'];
           'application/json': components['schemas']['UnreadCountDto'];
+          'text/json': components['schemas']['UnreadCountDto'];
         };
       };
     };
@@ -777,7 +823,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
+          'text/plain': components['schemas']['NotificationDto'];
           'application/json': components['schemas']['NotificationDto'];
+          'text/json': components['schemas']['NotificationDto'];
         };
       };
       /** @description Not Found */
@@ -786,7 +834,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/problem+json': components['schemas']['ProblemDetails'];
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
         };
       };
     };
