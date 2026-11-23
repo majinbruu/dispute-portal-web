@@ -2,7 +2,8 @@ import type { DebitOrderSort, DebitOrderStatus, DisputeState, MandateType } from
 
 export interface DebitOrderFilters {
   status?: DebitOrderStatus;
-  mandateType?: MandateType;
+  /** Required: the two kinds of debit order are never listed together. */
+  mandateType: MandateType;
   sort: DebitOrderSort;
   page: number;
   pageSize: number;

@@ -69,6 +69,11 @@
   font-size: var(--font-size-sm);
 }
 
+.action {
+  display: flex;
+  padding: 0 var(--space-4) var(--space-4);
+}
+
 .badges {
   grid-column: 1 / -1;
   display: flex;

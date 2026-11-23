@@ -94,6 +94,32 @@ describe('ItemList', () => {
   });
 });
 
+describe('ItemRow action', () => {
+  it('renders the action beside the row link, not inside it', () => {
+    render(
+      <MemoryRouter>
+        <ItemList label="Debit orders">
+          <ItemRow
+            to="/debit-orders/1"
+            title="Gym Co"
+            action={
+              <ButtonLink to="/debit-orders/1/dispute" size="small">
+                Dispute
+              </ButtonLink>
+            }
+          />
+        </ItemList>
+      </MemoryRouter>,
+    );
+
+    const row = screen.getByRole('listitem');
+    const action = within(row).getByRole('link', { name: 'Dispute' });
+    expect(within(row).getAllByRole('link')).toHaveLength(2);
+    expect(action.parentElement!.closest('a')).toBeNull();
+    expect(within(row).getByRole('link', { name: 'Gym Co' })).not.toContainElement(action);
+  });
+});
+
 describe('DescriptionList', () => {
   it('renders label and value pairs and skips empty values', () => {
     render(

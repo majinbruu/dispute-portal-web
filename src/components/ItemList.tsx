@@ -18,7 +18,7 @@ export function ItemList({ label, children }: ItemListProps) {
 }
 
 interface ItemRowProps {
-  /** Route the whole row links to. */
+  /** Route the row's main link goes to. */
   to: string;
   title: string;
   subtitle?: ReactNode;
@@ -28,9 +28,14 @@ interface ItemRowProps {
   meta?: ReactNode;
   /** Badges shown under the row. */
   badges?: ReactNode;
+  /**
+   * A further link or button for the row. It is rendered beside the main link, not inside it,
+   * because interactive elements must not be nested.
+   */
+  action?: ReactNode;
 }
 
-export function ItemRow({ to, title, subtitle, value, meta, badges }: ItemRowProps) {
+export function ItemRow({ to, title, subtitle, value, meta, badges, action }: ItemRowProps) {
   return (
     <li className={styles.row}>
       <Link to={to} className={styles.link}>
@@ -46,6 +51,7 @@ export function ItemRow({ to, title, subtitle, value, meta, badges }: ItemRowPro
         ) : null}
         {badges ? <span className={styles.badges}>{badges}</span> : null}
       </Link>
+      {action ? <div className={styles.action}>{action}</div> : null}
     </li>
   );
 }

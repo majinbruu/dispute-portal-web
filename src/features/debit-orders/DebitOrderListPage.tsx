@@ -2,19 +2,23 @@ import { useId } from 'react';
 import { useDebitOrders } from '../../api/queries';
 import { DEBIT_ORDER_SORTS, type DebitOrder } from '../../api/types';
 import { Badge } from '../../components/Badge';
-import { Button } from '../../components/Button';
+import { Button, ButtonLink } from '../../components/Button';
 import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
 import { ItemList, ItemRow } from '../../components/ItemList';
 import { PageHeader } from '../../components/PageHeader';
 import { Pager } from '../../components/Pager';
 import { Spinner } from '../../components/Spinner';
-import { formatDate, formatMoney } from '../../lib/format';
+import { formatDate, formatMoney, humanizeEnum } from '../../lib/format';
 import { toProblem } from '../../lib/problem';
 import styles from './DebitOrders.module.css';
 import { HistoryTabs } from './HistoryTabs';
-import { disputabilityBadge, MANDATE_TYPE_LABEL, SORT_LABEL, STATUS_TONE } from './presentation';
-import { type DebitOrderFilterState, useDebitOrderFilters } from './useDebitOrderFilters';
+import { MANDATE_TYPE_LABEL, SORT_LABEL, STATUS_TONE } from './presentation';
+import {
+  type DebitOrderFilterState,
+  MANDATE_TYPES,
+  useDebitOrderFilters,
+} from './useDebitOrderFilters';
 
 function Filters({ filters, setFilter }: Pick<DebitOrderFilterState, 'filters' | 'setFilter'>) {
   const id = useId();
@@ -26,6 +30,25 @@ function Filters({ filters, setFilter }: Pick<DebitOrderFilterState, 'filters' |
         event.preventDefault();
       }}
     >
+      <div className={styles.field}>
+        <label className={styles.label} htmlFor={`${id}-mandate-type`}>
+          Mandate type
+        </label>
+        <select
+          id={`${id}-mandate-type`}
+          className={styles.select}
+          value={filters.mandateType}
+          onChange={(event) => {
+            setFilter('mandateType', event.target.value);
+          }}
+        >
+          {MANDATE_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {MANDATE_TYPE_LABEL[type]}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className={styles.field}>
         <label className={styles.label} htmlFor={`${id}-status`}>
           Status
@@ -41,23 +64,6 @@ function Filters({ filters, setFilter }: Pick<DebitOrderFilterState, 'filters' |
           <option value="">All statuses</option>
           <option value="Accepted">Accepted</option>
           <option value="Rejected">Rejected</option>
-        </select>
-      </div>
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor={`${id}-mandate-type`}>
-          Mandate type
-        </label>
-        <select
-          id={`${id}-mandate-type`}
-          className={styles.select}
-          value={filters.mandateType ?? ''}
-          onChange={(event) => {
-            setFilter('mandateType', event.target.value);
-          }}
-        >
-          <option value="">All mandate types</option>
-          <option value="DebiCheck">{MANDATE_TYPE_LABEL.DebiCheck}</option>
-          <option value="Registered">{MANDATE_TYPE_LABEL.Registered}</option>
         </select>
       </div>
       <div className={styles.field}>
@@ -83,8 +89,38 @@ function Filters({ filters, setFilter }: Pick<DebitOrderFilterState, 'filters' |
   );
 }
 
+/**
+ * The row's own action, next to (never inside) the link to the detail page: Dispute when the
+ * API says the debit order can be disputed, or a way to the dispute that already exists.
+ */
+function rowAction(order: DebitOrder) {
+  if (order.eligibility.canDispute) {
+    return (
+      <ButtonLink
+        to={`/debit-orders/${order.id}/dispute`}
+        size="small"
+        aria-label={`Dispute ${order.creditorName} debit order of ${formatDate(order.actionDate)}`}
+      >
+        Dispute
+      </ButtonLink>
+    );
+  }
+  if (order.dispute) {
+    return (
+      <ButtonLink
+        to={`/disputes/${order.dispute.id}`}
+        variant="secondary"
+        size="small"
+        aria-label={`View dispute ${order.dispute.reference}`}
+      >
+        View dispute
+      </ButtonLink>
+    );
+  }
+  return undefined;
+}
+
 function DebitOrderRow({ order }: { order: DebitOrder }) {
-  const disputability = disputabilityBadge(order);
   return (
     <ItemRow
       to={`/debit-orders/${order.id}`}
@@ -94,17 +130,20 @@ function DebitOrderRow({ order }: { order: DebitOrder }) {
       meta={formatDate(order.actionDate)}
       badges={
         <>
-          <Badge tone={STATUS_TONE[order.status]}>{order.status}</Badge>
           <Badge>{MANDATE_TYPE_LABEL[order.mandateType]}</Badge>
-          <Badge tone={disputability.tone}>{disputability.label}</Badge>
+          <Badge tone={STATUS_TONE[order.status]}>{order.status}</Badge>
+          {order.dispute ? (
+            <Badge tone="info">Dispute: {humanizeEnum(order.dispute.status).toLowerCase()}</Badge>
+          ) : null}
         </>
       }
+      action={rowAction(order)}
     />
   );
 }
 
 function Results({ state }: { state: DebitOrderFilterState }) {
-  const { filters, hasActiveFilters, setPage, clearFilters } = state;
+  const { filters, hasStatusFilter, setPage, clearStatusFilter } = state;
   const query = useDebitOrders(filters);
 
   if (query.isPending) {
@@ -121,19 +160,20 @@ function Results({ state }: { state: DebitOrderFilterState }) {
   }
 
   const { items, page, totalPages, totalItems } = query.data;
+  const typeLabel = MANDATE_TYPE_LABEL[filters.mandateType];
   if (items.length === 0) {
     return (
       <EmptyState
         title="No debit order history"
         description={
-          hasActiveFilters
-            ? 'No debit orders match the filters you selected.'
-            : 'Debit orders collected from your account will appear here.'
+          hasStatusFilter
+            ? `No ${typeLabel} debit orders have the status you selected.`
+            : `${typeLabel} debit orders collected from your account will appear here.`
         }
         action={
-          hasActiveFilters ? (
-            <Button variant="secondary" onClick={clearFilters}>
-              Clear filters
+          hasStatusFilter ? (
+            <Button variant="secondary" onClick={clearStatusFilter}>
+              Show all statuses
             </Button>
           ) : undefined
         }
@@ -147,7 +187,7 @@ function Results({ state }: { state: DebitOrderFilterState }) {
       aria-busy={query.isPlaceholderData}
     >
       <p className={styles.count}>
-        {totalItems} debit {totalItems === 1 ? 'order' : 'orders'}
+        {totalItems} {typeLabel} debit {totalItems === 1 ? 'order' : 'orders'}
       </p>
       <ItemList label="Debit orders">
         {items.map((order) => (
