@@ -101,7 +101,7 @@ describe('DescriptionList', () => {
         items={[
           { label: 'Transaction ID', value: 'TXN-1' },
           { label: 'Outcome', value: null },
-          { label: 'Comment', value: '' },
+          { label: 'Reason', value: '' },
           { label: 'Collection day', value: 0 },
         ]}
       />,
@@ -110,7 +110,7 @@ describe('DescriptionList', () => {
     expect(screen.getByText('Transaction ID')).toBeInTheDocument();
     expect(screen.getByText('TXN-1')).toBeInTheDocument();
     expect(screen.queryByText('Outcome')).not.toBeInTheDocument();
-    expect(screen.queryByText('Comment')).not.toBeInTheDocument();
+    expect(screen.queryByText('Reason')).not.toBeInTheDocument();
     expect(screen.getByText('Collection day')).toBeInTheDocument();
   });
 });

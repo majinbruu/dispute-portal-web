@@ -29,16 +29,23 @@ describe('parseProblem', () => {
         title: 'Validation failed',
         detail: 'One or more fields are invalid.',
         code: 'validation_failed',
-        errors: { comment: ['Comment is too long.'], reasonCode: 'Reason is required.', bad: [1] },
+        errors: {
+          debitOrderId: ['Debit order is not valid.'],
+          reasonCode: 'Reason is required.',
+          bad: [1],
+        },
       },
       400,
     );
 
     expect(problem.errors).toEqual({
-      comment: ['Comment is too long.'],
+      debitOrderId: ['Debit order is not valid.'],
       reasonCode: ['Reason is required.'],
     });
-    expect(validationMessages(problem)).toEqual(['Comment is too long.', 'Reason is required.']);
+    expect(validationMessages(problem)).toEqual([
+      'Debit order is not valid.',
+      'Reason is required.',
+    ]);
   });
 
   it.each([

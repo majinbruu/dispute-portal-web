@@ -21,7 +21,6 @@ const refunded = disputeDetail({
   state: 'Completed',
   completedAt: '2026-03-05T08:15:40Z',
   outcomeNote: 'R 499,00 was paid back into your account.',
-  comment: 'Never signed up.',
   events: [
     {
       status: 'Refunded',
@@ -149,7 +148,6 @@ describe('dispute progress', () => {
     const details = screen.getByRole('region', { name: 'Dispute details' });
     expect(details).toHaveTextContent('ReferenceDSP-2026-000123');
     expect(details).toHaveTextContent('ReasonI did not authorise this debit order');
-    expect(details).toHaveTextContent('CommentNever signed up.');
     expect(details).toHaveTextContent(/AmountR\s499,00/);
     expect(details).toHaveTextContent('OutcomeR 499,00 was paid back into your account.');
     expect(within(details).getByRole('link', { name: /FitLife Gym/ })).toHaveAttribute(

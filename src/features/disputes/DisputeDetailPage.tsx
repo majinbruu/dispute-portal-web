@@ -62,12 +62,6 @@ function Details({ dispute }: { dispute: DisputeDetail }) {
           items={[
             { label: 'Reference', value: dispute.reference },
             { label: 'Reason', value: dispute.reasonDescription },
-            {
-              label: 'Comment',
-              value: dispute.comment ? (
-                <span className={styles.comment}>{dispute.comment}</span>
-              ) : null,
-            },
             { label: 'Amount', value: formatMoney(dispute.amount, dispute.currency) },
             {
               label: 'Debit order',

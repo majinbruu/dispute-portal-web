@@ -66,12 +66,12 @@ describe('ErrorState', () => {
           code: 'validation_failed',
           title: 'Validation failed',
           detail: 'One or more fields are invalid.',
-          errors: { comment: ['Comment must be 500 characters or fewer.'] },
+          errors: { reasonCode: ['Reason code is not recognised.'] },
         }}
       />,
     );
 
-    expect(screen.getByText('Comment must be 500 characters or fewer.')).toBeInTheDocument();
+    expect(screen.getByText('Reason code is not recognised.')).toBeInTheDocument();
   });
 
   it('offers a retry and extra actions', async () => {

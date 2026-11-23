@@ -71,24 +71,11 @@ describe('dispute form', () => {
     expect(requestsTo(fetchMock, 'POST', '/api/v1/disputes')).toHaveLength(0);
   });
 
-  it('limits the comment to 500 characters', async () => {
-    const { user } = renderForm();
-    await user.click(
-      await screen.findByRole('radio', { name: 'I did not authorise this debit order' }),
-    );
-    const comment = screen.getByLabelText(/Comment/);
-    expect(screen.getByText('500 of 500 characters remaining')).toBeInTheDocument();
+  it('asks only for a reason', async () => {
+    renderForm();
+    await screen.findByRole('group', { name: 'Why are you disputing this debit order?' });
 
-    await user.click(comment);
-    await user.paste('x'.repeat(501));
-    expect(screen.getByText('1 characters over the limit of 500')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Continue' }));
-
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Comment must be 500 characters or fewer',
-    );
-    expect(comment).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.queryByRole('heading', { name: 'Review your dispute' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 
   it('shows a review step before anything is submitted, and lets the customer go back', async () => {
@@ -96,13 +83,11 @@ describe('dispute form', () => {
     await user.click(
       await screen.findByRole('radio', { name: 'The amount differs from what I agreed to' }),
     );
-    await user.type(screen.getByLabelText(/Comment/), 'I agreed to R399.');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
     const heading = await screen.findByRole('heading', { name: 'Review your dispute' });
     expect(heading).toHaveFocus();
     expect(screen.getByText('The amount differs from what I agreed to')).toBeInTheDocument();
-    expect(screen.getByText('I agreed to R399.')).toBeInTheDocument();
     expect(screen.getByText(/R\s499,00/, { selector: 'dd' })).toBeInTheDocument();
     expect(requestsTo(fetchMock, 'POST', '/api/v1/disputes')).toHaveLength(0);
 
@@ -111,7 +96,6 @@ describe('dispute form', () => {
     expect(
       await screen.findByRole('radio', { name: 'The amount differs from what I agreed to' }),
     ).toBeChecked();
-    expect(screen.getByLabelText(/Comment/)).toHaveValue('I agreed to R399.');
   });
 
   it('submits the dispute with an Idempotency-Key and opens the dispute', async () => {
@@ -119,7 +103,6 @@ describe('dispute form', () => {
     await user.click(
       await screen.findByRole('radio', { name: 'I did not authorise this debit order' }),
     );
-    await user.type(screen.getByLabelText(/Comment/), '  Never signed up.  ');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await user.click(await screen.findByRole('button', { name: 'Submit dispute' }));
 
@@ -132,20 +115,8 @@ describe('dispute form', () => {
     expect(await request!.clone().json()).toEqual({
       debitOrderId: DEBIT_ORDER_ID,
       reasonCode: 'NOT_AUTHORISED',
-      comment: 'Never signed up.',
+      comment: null,
     });
-  });
-
-  it('sends a null comment when none was entered', async () => {
-    const { user, fetchMock } = renderForm();
-    await chooseReasonAndContinue(user);
-    expect(screen.getByText('None')).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Submit dispute' }));
-    await screen.findByText('Dispute progress screen');
-
-    const [request] = requestsTo(fetchMock, 'POST', '/api/v1/disputes');
-    expect(await request!.clone().json()).toMatchObject({ comment: null });
   });
 
   it('reuses the Idempotency-Key when the same submission is retried', async () => {
@@ -266,15 +237,13 @@ describe('dispute form', () => {
     it('lists field messages for a validation problem', async () => {
       const { user } = renderForm(() =>
         problemResponse(400, 'validation_failed', 'One or more fields are invalid.', {
-          errors: { comment: ['Comment contains characters that are not allowed.'] },
+          errors: { reasonCode: ['Reason code is not recognised.'] },
         }),
       );
       await chooseReasonAndContinue(user);
       await user.click(screen.getByRole('button', { name: 'Submit dispute' }));
 
-      expect(await screen.findByRole('alert')).toHaveTextContent(
-        'Comment contains characters that are not allowed.',
-      );
+      expect(await screen.findByRole('alert')).toHaveTextContent('Reason code is not recognised.');
     });
 
     it('points to the dispute history when the key was already used', async () => {
@@ -390,7 +359,7 @@ describe('describeSubmitError', () => {
 describe('useIdempotencyKey', () => {
   it('keeps one key per payload for the life of the form', () => {
     const { result } = renderHook(() => useIdempotencyKey());
-    const payload = { debitOrderId: 'a', reasonCode: 'R1', comment: null };
+    const payload = { debitOrderId: 'a', reasonCode: 'R1' };
 
     const first = result.current(payload);
 
@@ -400,7 +369,7 @@ describe('useIdempotencyKey', () => {
   });
 
   it('gives each form instance its own key', () => {
-    const payload = { debitOrderId: 'a', reasonCode: 'R1', comment: null };
+    const payload = { debitOrderId: 'a', reasonCode: 'R1' };
     const one = renderHook(() => useIdempotencyKey()).result.current(payload);
     const two = renderHook(() => useIdempotencyKey()).result.current(payload);
 

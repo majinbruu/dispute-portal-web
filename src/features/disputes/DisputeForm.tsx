@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useId, useRef, useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { useSubmitDispute } from '../../api/queries';
 import type { DebitOrder, DisputeReason, SubmitDisputeRequest } from '../../api/types';
@@ -11,7 +11,6 @@ import { ErrorState } from '../../components/ErrorState';
 import { formatDate, formatMoney } from '../../lib/format';
 import { type Problem, toProblem } from '../../lib/problem';
 import {
-  COMMENT_MAX_LENGTH,
   DISPUTE_FORM_DEFAULTS,
   disputeFormSchema,
   type DisputeFormValues,
@@ -29,12 +28,7 @@ interface DisputeFormProps {
 }
 
 function toRequest(order: DebitOrder, values: DisputeFormValues): SubmitDisputeRequest {
-  const comment = values.comment.trim();
-  return {
-    debitOrderId: order.id,
-    reasonCode: values.reasonCode,
-    comment: comment === '' ? null : comment,
-  };
+  return { debitOrderId: order.id, reasonCode: values.reasonCode, comment: null };
 }
 
 interface SubmitErrorProps {
@@ -64,8 +58,8 @@ function SubmitError({ problem, order }: SubmitErrorProps) {
 }
 
 /**
- * The two-step dispute form: choose a reason (with an optional comment), then review and
- * submit. Nothing is sent until the customer confirms on the review step.
+ * The two-step dispute form: choose a reason, then review and submit. Nothing is sent until the
+ * customer confirms on the review step.
  */
 export function DisputeForm({ order, reasons }: DisputeFormProps) {
   const id = useId();
@@ -80,13 +74,11 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
     register,
     handleSubmit,
     getValues,
-    control,
     formState: { errors },
   } = useForm<DisputeFormValues>({
     resolver: zodResolver(disputeFormSchema),
     defaultValues: DISPUTE_FORM_DEFAULTS,
   });
-  const comment = useWatch({ control, name: 'comment' });
 
   useEffect(() => {
     // Moving between steps replaces the content, so move focus to the new step's heading for
@@ -127,15 +119,6 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
               { label: 'Amount', value: formatMoney(order.amount, order.currency) },
               { label: 'Date', value: formatDate(order.actionDate) },
               { label: 'Reason', value: reason?.description ?? values.reasonCode },
-              {
-                label: 'Comment',
-                value:
-                  values.comment.trim() === '' ? (
-                    'None'
-                  ) : (
-                    <span className={styles.comment}>{values.comment.trim()}</span>
-                  ),
-              },
             ]}
           />
         </Card>
@@ -164,10 +147,6 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
   }
 
   const reasonErrorId = `${id}-reason-error`;
-  const commentId = `${id}-comment`;
-  const commentHintId = `${id}-comment-hint`;
-  const commentErrorId = `${id}-comment-error`;
-  const remaining = COMMENT_MAX_LENGTH - comment.length;
 
   return (
     <form
@@ -203,30 +182,6 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
           </p>
         ) : null}
       </fieldset>
-
-      <div className={styles.field}>
-        <label htmlFor={commentId} className={styles.label}>
-          Comment <span className={styles.optional}>(optional)</span>
-        </label>
-        <textarea
-          id={commentId}
-          className={styles.textarea}
-          rows={4}
-          aria-invalid={errors.comment ? true : undefined}
-          aria-describedby={errors.comment ? `${commentHintId} ${commentErrorId}` : commentHintId}
-          {...register('comment')}
-        />
-        <p id={commentHintId} className={styles.hint}>
-          {remaining >= 0
-            ? `${remaining} of ${COMMENT_MAX_LENGTH} characters remaining`
-            : `${-remaining} characters over the limit of ${COMMENT_MAX_LENGTH}`}
-        </p>
-        {errors.comment ? (
-          <p id={commentErrorId} className={styles.fieldError} role="alert">
-            {errors.comment.message}
-          </p>
-        ) : null}
-      </div>
 
       <div className={styles.actions}>
         <Button type="submit">Continue</Button>
