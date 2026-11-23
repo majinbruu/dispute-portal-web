@@ -9,6 +9,7 @@ import { Card } from '../../components/Card';
 import { DescriptionList } from '../../components/DescriptionList';
 import { ErrorState } from '../../components/ErrorState';
 import { formatDate, formatMoney } from '../../lib/format';
+import { disputeReasonLabel, mandateTypeLabel } from '../../lib/labels';
 import { type Problem, toProblem } from '../../lib/problem';
 import {
   DISPUTE_FORM_DEFAULTS,
@@ -118,7 +119,13 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
               { label: 'Company', value: order.creditorName },
               { label: 'Amount', value: formatMoney(order.amount, order.currency) },
               { label: 'Date', value: formatDate(order.actionDate) },
-              { label: 'Reason', value: reason?.description ?? values.reasonCode },
+              { label: 'Mandate type', value: mandateTypeLabel(order.mandateType) },
+              {
+                label: 'Reason',
+                value: reason
+                  ? disputeReasonLabel(reason.description, reason.code)
+                  : values.reasonCode,
+              },
             ]}
           />
         </Card>
@@ -172,7 +179,7 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
           {reasons.map((reason) => (
             <label key={reason.code} className={styles.reason}>
               <input type="radio" value={reason.code} {...register('reasonCode')} />
-              <span>{reason.description}</span>
+              <span>{disputeReasonLabel(reason.description, reason.code)}</span>
             </label>
           ))}
         </div>

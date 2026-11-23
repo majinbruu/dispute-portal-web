@@ -9,9 +9,10 @@ import { PageHeader } from '../../components/PageHeader';
 import { Spinner } from '../../components/Spinner';
 import { Timeline, type TimelineItem } from '../../components/Timeline';
 import { formatDate, formatDateTime, formatMoney } from '../../lib/format';
+import { disputeReasonLabel, disputeStatusLabel, mandateTypeLabel } from '../../lib/labels';
 import { toProblem } from '../../lib/problem';
 import styles from './Disputes.module.css';
-import { DISPUTE_STATUS_LABEL, DISPUTE_STATUS_TONE } from './presentation';
+import { DISPUTE_STATUS_TONE } from './presentation';
 import { useDisputeStatusSync } from './useDisputeStatusSync';
 
 const TITLE = 'Dispute progress';
@@ -23,7 +24,7 @@ function toTimelineItems(dispute: DisputeDetail): TimelineItem[] {
     .map((event) => ({
       id: `${event.status}-${event.occurredAt}`,
       occurredAt: event.occurredAt,
-      title: DISPUTE_STATUS_LABEL[event.status],
+      title: disputeStatusLabel(event.status),
       description: event.description,
     }));
 }
@@ -42,7 +43,7 @@ function Details({ dispute }: { dispute: DisputeDetail }) {
         </div>
         <div className={styles.badges}>
           <Badge tone={DISPUTE_STATUS_TONE[dispute.status]}>
-            {DISPUTE_STATUS_LABEL[dispute.status]}
+            {disputeStatusLabel(dispute.status)}
           </Badge>
           <Badge>{isPending ? 'Pending' : 'Completed'}</Badge>
         </div>
@@ -61,7 +62,10 @@ function Details({ dispute }: { dispute: DisputeDetail }) {
         <DescriptionList
           items={[
             { label: 'Reference', value: dispute.reference },
-            { label: 'Reason', value: dispute.reasonDescription },
+            {
+              label: 'Reason',
+              value: disputeReasonLabel(dispute.reasonDescription, dispute.reasonCode),
+            },
             { label: 'Amount', value: formatMoney(dispute.amount, dispute.currency) },
             {
               label: 'Debit order',
@@ -72,7 +76,8 @@ function Details({ dispute }: { dispute: DisputeDetail }) {
               ),
             },
             { label: 'Transaction ID', value: dispute.originalTransactionId },
-            { label: 'Mandate', value: `${dispute.mandateType} ${dispute.mandateReference}` },
+            { label: 'Mandate type', value: mandateTypeLabel(dispute.mandateType) },
+            { label: 'Mandate reference', value: dispute.mandateReference },
             { label: 'Submitted', value: formatDateTime(dispute.submittedAt) },
             {
               label: 'Completed',

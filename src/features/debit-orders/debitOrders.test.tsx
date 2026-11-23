@@ -32,7 +32,7 @@ const disputed = debitOrder({
     message: 'This debit order has already been disputed.',
     lastDisputeDate: '2026-04-09',
   },
-  dispute: { id: DISPUTE_ID, reference: 'DSP-2026-000123', status: 'Submitted' },
+  dispute: { id: DISPUTE_ID, reference: 'DSP-2026-000123', status: 'SentToScheme' },
 });
 
 /** Wording the customer must never see: why something cannot be disputed. */
@@ -65,6 +65,19 @@ describe('debit order list', () => {
     expect(screen.getByText('2 DebiCheck debit orders')).toBeInTheDocument();
   });
 
+  it('labels the Registered type as Registered Mandate', async () => {
+    renderApp({
+      routes: debitOrderRoutes,
+      at: '/debit-orders?mandateType=Registered',
+      api: { [LIST]: paged([debitOrder({ mandateType: 'Registered' })]) },
+    });
+
+    const list = await screen.findByRole('list', { name: 'Debit orders' });
+    expect(within(list).getByRole('listitem')).toHaveTextContent(/Registered Mandate\s*Accepted/);
+    expect(screen.getByText('1 Registered Mandate debit order')).toBeInTheDocument();
+    expect(screen.getByLabelText('Mandate type')).toHaveValue('Registered');
+  });
+
   it('offers Dispute only on rows the API says can be disputed', async () => {
     renderApp({
       routes: debitOrderRoutes,
@@ -86,7 +99,7 @@ describe('debit order list', () => {
     expect(within(rejectedRow!).queryByText('Dispute')).not.toBeInTheDocument();
 
     expect(within(disputedRow!).queryByText('Dispute')).not.toBeInTheDocument();
-    expect(disputedRow).toHaveTextContent('Dispute: submitted');
+    expect(disputedRow).toHaveTextContent('Dispute: processing');
     expect(within(disputedRow!).getByRole('link', { name: /^View dispute/ })).toHaveAttribute(
       'href',
       `/disputes/${DISPUTE_ID}`,
@@ -179,7 +192,7 @@ describe('debit order list', () => {
         within(screen.getByLabelText(label))
           .getAllByRole('option')
           .map((option) => option.textContent);
-      expect(options('Mandate type')).toEqual(['DebiCheck', 'Registered']);
+      expect(options('Mandate type')).toEqual(['DebiCheck', 'Registered Mandate']);
       expect(options('Status')).toEqual(['All statuses', 'Accepted', 'Rejected']);
     });
 
@@ -338,7 +351,7 @@ describe('debit order detail', () => {
 
     const region = await screen.findByRole('region', { name: 'Dispute' });
     expect(region).toHaveTextContent('ReferenceDSP-2026-000123');
-    expect(region).toHaveTextContent('StatusSubmitted');
+    expect(region).toHaveTextContent('StatusProcessing');
     expect(within(region).getByRole('link', { name: 'View dispute progress' })).toHaveAttribute(
       'href',
       `/disputes/${DISPUTE_ID}`,

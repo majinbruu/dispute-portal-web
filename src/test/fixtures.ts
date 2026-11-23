@@ -66,9 +66,9 @@ export function mandate(overrides: Partial<Mandate> = {}): Mandate {
 }
 
 export const disputeReasons: DisputeReason[] = [
-  { code: 'NOT_AUTHORISED', description: 'I did not authorise this debit order' },
-  { code: 'AMOUNT_DIFFERS', description: 'The amount differs from what I agreed to' },
-  { code: 'CANCELLED', description: 'I cancelled this debit order' },
+  { code: 'MD01', description: 'I did not authorise this debit order' },
+  { code: 'AM09', description: 'The amount is not what I agreed to' },
+  { code: 'MD06', description: 'I cancelled this debit order' },
 ];
 
 export function disputeSummary(overrides: Partial<DisputeSummary> = {}): DisputeSummary {
@@ -80,7 +80,7 @@ export function disputeSummary(overrides: Partial<DisputeSummary> = {}): Dispute
     amount: 499.0,
     currency: 'ZAR',
     actionDate: '2026-03-01',
-    reasonCode: 'NOT_AUTHORISED',
+    reasonCode: 'MD01',
     reasonDescription: 'I did not authorise this debit order',
     status: 'Submitted',
     state: 'Pending',

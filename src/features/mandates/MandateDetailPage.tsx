@@ -8,6 +8,7 @@ import { ErrorState } from '../../components/ErrorState';
 import { PageHeader } from '../../components/PageHeader';
 import { Spinner } from '../../components/Spinner';
 import { formatDate, formatDateTime, formatMoney, formatOrdinal } from '../../lib/format';
+import { mandateTypeLabel } from '../../lib/labels';
 import { toProblem } from '../../lib/problem';
 import styles from './Mandates.module.css';
 import { MANDATE_STATUS_TONE, MANDATE_TYPE_VIEWS, mandateListPath } from './presentation';
@@ -39,7 +40,7 @@ function Details({ mandate }: { mandate: Mandate }) {
           </div>
           <div className={styles.badges}>
             <Badge tone={MANDATE_STATUS_TONE[mandate.status]}>{mandate.status}</Badge>
-            <Badge>{mandate.type}</Badge>
+            <Badge>{mandateTypeLabel(mandate.type)}</Badge>
           </div>
         </div>
         <DescriptionList
@@ -123,7 +124,7 @@ export function MandateDetailPage() {
     <>
       <PageHeader
         title={mandate.creditorName}
-        description={`${mandate.type} mandate`}
+        description={mandate.type === 'Registered' ? 'Registered Mandate' : 'DebiCheck mandate'}
         back={{ to: mandateListPath(mandate.type), label: view.title }}
       />
       <Details mandate={mandate} />

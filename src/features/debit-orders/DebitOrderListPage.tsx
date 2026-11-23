@@ -9,11 +9,12 @@ import { ItemList, ItemRow } from '../../components/ItemList';
 import { PageHeader } from '../../components/PageHeader';
 import { Pager } from '../../components/Pager';
 import { Spinner } from '../../components/Spinner';
-import { formatDate, formatMoney, humanizeEnum } from '../../lib/format';
+import { formatDate, formatMoney } from '../../lib/format';
+import { disputeStatusLabel, mandateTypeLabel } from '../../lib/labels';
 import { toProblem } from '../../lib/problem';
 import styles from './DebitOrders.module.css';
 import { HistoryTabs } from './HistoryTabs';
-import { MANDATE_TYPE_LABEL, SORT_LABEL, STATUS_TONE } from './presentation';
+import { SORT_LABEL, STATUS_TONE } from './presentation';
 import {
   type DebitOrderFilterState,
   MANDATE_TYPES,
@@ -44,7 +45,7 @@ function Filters({ filters, setFilter }: Pick<DebitOrderFilterState, 'filters' |
         >
           {MANDATE_TYPES.map((type) => (
             <option key={type} value={type}>
-              {MANDATE_TYPE_LABEL[type]}
+              {mandateTypeLabel(type)}
             </option>
           ))}
         </select>
@@ -130,10 +131,12 @@ function DebitOrderRow({ order }: { order: DebitOrder }) {
       meta={formatDate(order.actionDate)}
       badges={
         <>
-          <Badge>{MANDATE_TYPE_LABEL[order.mandateType]}</Badge>
+          <Badge>{mandateTypeLabel(order.mandateType)}</Badge>
           <Badge tone={STATUS_TONE[order.status]}>{order.status}</Badge>
           {order.dispute ? (
-            <Badge tone="info">Dispute: {humanizeEnum(order.dispute.status).toLowerCase()}</Badge>
+            <Badge tone="info">
+              Dispute: {disputeStatusLabel(order.dispute.status).toLowerCase()}
+            </Badge>
           ) : null}
         </>
       }
@@ -160,7 +163,7 @@ function Results({ state }: { state: DebitOrderFilterState }) {
   }
 
   const { items, page, totalPages, totalItems } = query.data;
-  const typeLabel = MANDATE_TYPE_LABEL[filters.mandateType];
+  const typeLabel = mandateTypeLabel(filters.mandateType);
   if (items.length === 0) {
     return (
       <EmptyState

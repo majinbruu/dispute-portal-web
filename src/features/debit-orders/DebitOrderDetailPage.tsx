@@ -9,9 +9,10 @@ import { ErrorState } from '../../components/ErrorState';
 import { PageHeader } from '../../components/PageHeader';
 import { Spinner } from '../../components/Spinner';
 import { formatDate, formatMoney, humanizeEnum } from '../../lib/format';
+import { disputeStatusLabel, mandateTypeLabel } from '../../lib/labels';
 import { toProblem } from '../../lib/problem';
 import styles from './DebitOrders.module.css';
-import { MANDATE_TYPE_LABEL, STATUS_TONE } from './presentation';
+import { STATUS_TONE } from './presentation';
 
 const BACK = { to: '/debit-orders', label: 'My debit orders' };
 
@@ -23,7 +24,7 @@ function Details({ order }: { order: DebitOrder }) {
         <div className={styles.summary}>
           <p className={styles.amount}>{formatMoney(order.amount, order.currency)}</p>
           <div className={styles.badges}>
-            <Badge>{MANDATE_TYPE_LABEL[order.mandateType]}</Badge>
+            <Badge>{mandateTypeLabel(order.mandateType)}</Badge>
             <Badge tone={STATUS_TONE[order.status]}>{order.status}</Badge>
           </div>
         </div>
@@ -50,7 +51,7 @@ function Details({ order }: { order: DebitOrder }) {
           <DescriptionList
             items={[
               { label: 'Reference', value: dispute.reference },
-              { label: 'Status', value: humanizeEnum(dispute.status) },
+              { label: 'Status', value: disputeStatusLabel(dispute.status) },
             ]}
           />
           <div className={styles.actions}>
@@ -63,7 +64,7 @@ function Details({ order }: { order: DebitOrder }) {
       <Card title="Mandate">
         <DescriptionList
           items={[
-            { label: 'Mandate type', value: MANDATE_TYPE_LABEL[order.mandateType] },
+            { label: 'Mandate type', value: mandateTypeLabel(order.mandateType) },
             {
               label: 'Mandate reference',
               value: <Link to={`/mandates/${order.mandateId}`}>{order.mandateReference}</Link>,

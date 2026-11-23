@@ -39,7 +39,7 @@ type User = ReturnType<typeof renderForm>['user'];
 
 async function chooseReasonAndContinue(
   user: User,
-  reason = 'I did not authorise this debit order',
+  reason = 'I did not authorise this debit order (MD01)',
 ) {
   await user.click(await screen.findByRole('radio', { name: reason }));
   await user.click(screen.getByRole('button', { name: 'Continue' }));
@@ -81,27 +81,28 @@ describe('dispute form', () => {
   it('shows a review step before anything is submitted, and lets the customer go back', async () => {
     const { user, fetchMock } = renderForm();
     await user.click(
-      await screen.findByRole('radio', { name: 'The amount differs from what I agreed to' }),
+      await screen.findByRole('radio', { name: 'The amount is not what I agreed to (AM09)' }),
     );
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
     const heading = await screen.findByRole('heading', { name: 'Review your dispute' });
     expect(heading).toHaveFocus();
-    expect(screen.getByText('The amount differs from what I agreed to')).toBeInTheDocument();
+    expect(screen.getByText('The amount is not what I agreed to (AM09)')).toBeInTheDocument();
+    expect(screen.getByText('DebiCheck', { selector: 'dd' })).toBeInTheDocument();
     expect(screen.getByText(/R\s499,00/, { selector: 'dd' })).toBeInTheDocument();
     expect(requestsTo(fetchMock, 'POST', '/api/v1/disputes')).toHaveLength(0);
 
     await user.click(screen.getByRole('button', { name: 'Back' }));
 
     expect(
-      await screen.findByRole('radio', { name: 'The amount differs from what I agreed to' }),
+      await screen.findByRole('radio', { name: 'The amount is not what I agreed to (AM09)' }),
     ).toBeChecked();
   });
 
   it('submits the dispute with an Idempotency-Key and opens the dispute', async () => {
     const { user, fetchMock, router } = renderForm();
     await user.click(
-      await screen.findByRole('radio', { name: 'I did not authorise this debit order' }),
+      await screen.findByRole('radio', { name: 'I did not authorise this debit order (MD01)' }),
     );
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await user.click(await screen.findByRole('button', { name: 'Submit dispute' }));
@@ -114,7 +115,7 @@ describe('dispute form', () => {
     expect(request!.headers.get('Authorization')).toBe('Bearer test-token');
     expect(await request!.clone().json()).toEqual({
       debitOrderId: DEBIT_ORDER_ID,
-      reasonCode: 'NOT_AUTHORISED',
+      reasonCode: 'MD01',
     });
   });
 
@@ -157,14 +158,14 @@ describe('dispute form', () => {
     await screen.findByRole('alert');
 
     await user.click(screen.getByRole('button', { name: 'Back' }));
-    await chooseReasonAndContinue(user, 'I cancelled this debit order');
+    await chooseReasonAndContinue(user, 'I cancelled this debit order (MD06)');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Submit dispute' }));
     await screen.findByText('Dispute progress screen');
 
     const [first, second] = requestsTo(fetchMock, 'POST', '/api/v1/disputes');
     expect(second!.headers.get('Idempotency-Key')).not.toBe(first!.headers.get('Idempotency-Key'));
-    expect(await second!.clone().json()).toMatchObject({ reasonCode: 'CANCELLED' });
+    expect(await second!.clone().json()).toMatchObject({ reasonCode: 'MD06' });
   });
 
   it('disables the buttons while the dispute is being submitted', async () => {

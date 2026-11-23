@@ -47,7 +47,7 @@ describe('dispute history', () => {
       at: '/disputes',
       api: {
         [LIST]: listByState(
-          [disputeSummary()],
+          [disputeSummary({ status: 'SentToScheme' })],
           [
             disputeSummary({
               id: 'done-1',
@@ -66,7 +66,10 @@ describe('dispute history', () => {
     expect(pending.getByRole('link')).toHaveAttribute('href', `/disputes/${DISPUTE_ID}`);
     expect(pending.getByRole('link')).toHaveTextContent('FitLife Gym');
     expect(pending.getByRole('link')).toHaveTextContent('DSP-2026-000123');
-    expect(pending.getByRole('link')).toHaveTextContent('Submitted');
+    expect(pending.getByRole('link')).toHaveTextContent(
+      'I did not authorise this debit order (MD01)',
+    );
+    expect(pending.getByRole('link')).toHaveTextContent('Processing');
 
     const completed = within(await screen.findByRole('list', { name: 'Completed disputes' }));
     expect(completed.getByRole('link')).toHaveTextContent('SureCover Insurance');
@@ -137,7 +140,7 @@ describe('dispute progress', () => {
     ).getAllByRole('listitem');
     expect(steps.map((step) => within(step).getAllByRole('paragraph')[0]!.textContent)).toEqual([
       'Submitted',
-      'Sent to scheme',
+      'Processing',
       'Refunded',
     ]);
     expect(steps[2]).toHaveAttribute('aria-current', 'step');
@@ -147,7 +150,7 @@ describe('dispute progress', () => {
 
     const details = screen.getByRole('region', { name: 'Dispute details' });
     expect(details).toHaveTextContent('ReferenceDSP-2026-000123');
-    expect(details).toHaveTextContent('ReasonI did not authorise this debit order');
+    expect(details).toHaveTextContent('ReasonI did not authorise this debit order (MD01)');
     expect(details).toHaveTextContent(/AmountR\s499,00/);
     expect(details).toHaveTextContent('OutcomeR 499,00 was paid back into your account.');
     expect(within(details).getByRole('link', { name: /FitLife Gym/ })).toHaveAttribute(

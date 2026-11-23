@@ -9,10 +9,11 @@ import { PageHeader } from '../../components/PageHeader';
 import { Pager } from '../../components/Pager';
 import { Spinner } from '../../components/Spinner';
 import { formatDateTime, formatMoney } from '../../lib/format';
+import { disputeReasonLabel, disputeStatusLabel } from '../../lib/labels';
 import { toProblem } from '../../lib/problem';
 import { HistoryTabs } from '../debit-orders/HistoryTabs';
 import styles from './Disputes.module.css';
-import { DISPUTE_STATUS_LABEL, DISPUTE_STATUS_TONE } from './presentation';
+import { DISPUTE_STATUS_TONE } from './presentation';
 
 const PAGE_SIZE = 5;
 
@@ -52,12 +53,12 @@ function DisputeSection({ state, title, emptyMessage }: SectionProps) {
               key={dispute.id}
               to={`/disputes/${dispute.id}`}
               title={dispute.creditorName}
-              subtitle={`${dispute.reference} · ${dispute.reasonDescription}`}
+              subtitle={`${dispute.reference} · ${disputeReasonLabel(dispute.reasonDescription, dispute.reasonCode)}`}
               value={formatMoney(dispute.amount, dispute.currency)}
               meta={formatDateTime(dispute.completedAt ?? dispute.submittedAt)}
               badges={
                 <Badge tone={DISPUTE_STATUS_TONE[dispute.status]}>
-                  {DISPUTE_STATUS_LABEL[dispute.status]}
+                  {disputeStatusLabel(dispute.status)}
                 </Badge>
               }
             />

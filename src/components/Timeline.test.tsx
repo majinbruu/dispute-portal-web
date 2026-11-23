@@ -8,7 +8,7 @@ const items: TimelineItem[] = [
     title: 'Submitted',
     description: 'We received your dispute.',
   },
-  { id: '2', occurredAt: '2026-03-02T09:45:00Z', title: 'Sent to scheme' },
+  { id: '2', occurredAt: '2026-03-02T09:45:00Z', title: 'Processing' },
   {
     id: '3',
     occurredAt: '2026-03-02T10:05:00Z',
@@ -26,7 +26,7 @@ describe('Timeline', () => {
 
     expect(steps).toHaveLength(3);
     expect(steps[0]).toHaveTextContent('Submitted');
-    expect(steps[1]).toHaveTextContent('Sent to scheme');
+    expect(steps[1]).toHaveTextContent('Processing');
     expect(steps[2]).toHaveTextContent('Refunded');
   });
 
