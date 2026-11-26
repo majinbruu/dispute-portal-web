@@ -43,6 +43,7 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['src/**/*.test.{ts,tsx}', 'src/test/**', 'src/**/*.d.ts', 'src/main.tsx'],
       thresholds: {
+        'src/auth/**': coverageThreshold,
         'src/lib/**': coverageThreshold,
         'src/components/**': coverageThreshold,
       },

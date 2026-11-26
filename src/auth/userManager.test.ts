@@ -1,4 +1,5 @@
-import { buildOidcSettings } from './userManager';
+import { oidcUser } from '../test/oidcUser';
+import { buildOidcSettings, endLocalSession, getAccessToken, getUserManager } from './userManager';
 
 const config = {
   oidcAuthority: 'http://localhost:8080/realms/acme-bank',
@@ -30,5 +31,44 @@ describe('buildOidcSettings', () => {
     expect(await settings.userStore!.get('user:probe')).toBe('token');
     expect(window.localStorage).toHaveLength(0);
     expect(window.sessionStorage).toHaveLength(0);
+  });
+});
+
+describe('the shared session', () => {
+  beforeAll(() => {
+    window.__APP_CONFIG__ = config;
+  });
+
+  afterEach(async () => {
+    await endLocalSession();
+  });
+
+  afterAll(() => {
+    delete window.__APP_CONFIG__;
+  });
+
+  it('has no access token while signed out', async () => {
+    expect(await getAccessToken()).toBeUndefined();
+  });
+
+  it('hands out the access token of the signed-in customer', async () => {
+    await getUserManager().storeUser(oidcUser());
+
+    expect(await getAccessToken()).toBe('access-token');
+  });
+
+  it('withholds an expired access token', async () => {
+    await getUserManager().storeUser(oidcUser({ expiresIn: -60 }));
+
+    expect(await getAccessToken()).toBeUndefined();
+  });
+
+  it('forgets the customer when the local session ends', async () => {
+    await getUserManager().storeUser(oidcUser());
+
+    await endLocalSession();
+
+    expect(await getUserManager().getUser()).toBeNull();
+    expect(await getAccessToken()).toBeUndefined();
   });
 });
