@@ -2,7 +2,7 @@
   "name": "dispute-portal-web",
   "version": "1.0.0",
   "private": true,
-  "description": "ACME Bank debit order dispute portal (web front end)",
+  "description": "ACME Bank transaction dispute portal (web front end)",
   "type": "module",
   "engines": {
     "node": ">=26"

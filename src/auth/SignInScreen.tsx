@@ -14,10 +14,10 @@ export function SignInScreen({ onSignIn, busy = false, errorMessage }: SignInScr
     <main className={styles.screen}>
       <div className={styles.panel}>
         <h1 className={styles.brand}>ACME Bank</h1>
-        <p className={styles.product}>Debit order disputes</p>
+        <p className={styles.product}>Transaction disputes</p>
         <p className={styles.intro}>
-          Sign in to view your debit orders and mandates, dispute a debit order and follow the
-          progress of your disputes.
+          Sign in to view your debit orders, card transactions and mandates, dispute a transaction
+          and follow the progress of your disputes.
         </p>
         {errorMessage ? (
           <p className={styles.error} role="alert">

@@ -7,8 +7,10 @@ describe('SignInScreen', () => {
     render(<SignInScreen onSignIn={vi.fn()} />);
 
     expect(screen.getByRole('heading', { level: 1, name: 'ACME Bank' })).toBeInTheDocument();
-    expect(screen.getByText('Debit order disputes')).toBeInTheDocument();
-    expect(screen.getByText(/Sign in to view your debit orders and mandates/)).toBeInTheDocument();
+    expect(screen.getByText('Transaction disputes')).toBeInTheDocument();
+    expect(
+      screen.getByText(/Sign in to view your debit orders, card transactions and mandates/),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeEnabled();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
