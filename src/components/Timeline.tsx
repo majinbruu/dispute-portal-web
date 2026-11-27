@@ -8,6 +8,8 @@ export interface TimelineItem {
   occurredAt: string;
   title: string;
   description?: string;
+  /** Who caused the step, on screens that show it. */
+  actor?: string;
 }
 
 interface TimelineProps {
@@ -39,6 +41,7 @@ export function Timeline({ items, label, timeZone }: TimelineProps) {
               <p className={styles.title}>{item.title}</p>
               {item.description ? <p className={styles.description}>{item.description}</p> : null}
               <p className={styles.time}>
+                {item.actor ? `${item.actor} · ` : null}
                 <time dateTime={item.occurredAt}>
                   <span className="visually-hidden">
                     {formatDateTime(item.occurredAt, timeZone)}

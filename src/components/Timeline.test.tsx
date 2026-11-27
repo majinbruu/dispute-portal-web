@@ -18,6 +18,20 @@ const items: TimelineItem[] = [
 ];
 
 describe('Timeline', () => {
+  it('says who caused a step when the screen gives it', () => {
+    render(
+      <Timeline
+        items={[{ ...items[0]!, actor: 'Customer' }, items[1]!]}
+        label="Audit trail"
+        timeZone="UTC"
+      />,
+    );
+
+    const [first, second] = screen.getAllByRole('listitem');
+    expect(first).toHaveTextContent(/Customer · .*08:15/);
+    expect(second).not.toHaveTextContent('·');
+  });
+
   it('renders each step in order inside a labelled list', () => {
     render(<Timeline items={items} label="Dispute progress" timeZone="UTC" />);
 
