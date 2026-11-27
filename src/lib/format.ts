@@ -117,3 +117,15 @@ export function humanizeEnum(value: string): string {
   const words = value.replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase();
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
+
+const REGION_NAMES = new Intl.DisplayNames([LOCALE], { type: 'region' });
+
+/** The name of a country from its ISO 3166 two-letter code: `ZA` becomes `South Africa`. */
+export function formatCountry(code: string): string {
+  try {
+    return REGION_NAMES.of(code) ?? code;
+  } catch {
+    // Not a well-formed region code; show what the API sent.
+    return code;
+  }
+}

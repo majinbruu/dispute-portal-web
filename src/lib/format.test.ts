@@ -1,4 +1,5 @@
 import {
+  formatCountry,
   formatDate,
   formatDateTime,
   formatDayBadge,
@@ -128,5 +129,17 @@ describe('humanizeEnum', () => {
     expect(humanizeEnum('SentToScheme')).toBe('Sent to scheme');
     expect(humanizeEnum('Refunded')).toBe('Refunded');
     expect(humanizeEnum('OnceOff')).toBe('Once off');
+  });
+});
+
+describe('formatCountry', () => {
+  it('names a country from its two-letter code', () => {
+    expect(formatCountry('ZA')).toBe('South Africa');
+    expect(formatCountry('GB')).toBe('United Kingdom');
+  });
+
+  it('shows the code itself when it is not a country code', () => {
+    expect(formatCountry('South Africa')).toBe('South Africa');
+    expect(formatCountry('')).toBe('');
   });
 });
