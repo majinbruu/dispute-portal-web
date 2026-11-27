@@ -19,7 +19,8 @@ export default defineConfig({
   // A journey waits for the simulated scheme outcome, which takes 20 to 30 seconds.
   timeout: 120_000,
   expect: { timeout: 15_000 },
-  reporter: [[isCi ? 'github' : 'list'], ['html', { open: 'never' }]],
+  // In CI the github reporter also annotates the run with each failure.
+  reporter: [['list'], ...(isCi ? [['github'] as const] : []), ['html', { open: 'never' }]],
   use: {
     baseURL,
     actionTimeout: 15_000,
