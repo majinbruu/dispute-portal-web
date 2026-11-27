@@ -73,12 +73,12 @@ describe('AuthProvider', () => {
   });
 
   it('leaves the address alone when the page is not a sign-in callback', async () => {
-    window.history.replaceState({}, '', '/debit-orders?status=Rejected');
+    window.history.replaceState({}, '', '/transactions?status=Rejected');
     const codeExchange = stubCodeExchange(oidcUser());
     renderProvider();
 
     expect(await screen.findByText('Signed out')).toBeInTheDocument();
     expect(codeExchange).not.toHaveBeenCalled();
-    expect(currentUrl()).toBe('/debit-orders?status=Rejected');
+    expect(currentUrl()).toBe('/transactions?status=Rejected');
   });
 });

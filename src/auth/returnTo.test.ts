@@ -9,7 +9,7 @@ describe('sanitizeReturnTo', () => {
     'https://evil.example/',
     '//evil.example/',
     '/\\evil.example',
-    'debit-orders',
+    'transactions',
     '',
     undefined,
     null,
@@ -21,8 +21,8 @@ describe('sanitizeReturnTo', () => {
 
 describe('currentReturnTo', () => {
   it('keeps the path and unrelated query parameters', () => {
-    expect(currentReturnTo({ pathname: '/debit-orders', search: '?status=Rejected&page=2' })).toBe(
-      '/debit-orders?status=Rejected&page=2',
+    expect(currentReturnTo({ pathname: '/transactions', search: '?status=Rejected&page=2' })).toBe(
+      '/transactions?status=Rejected&page=2',
     );
   });
 

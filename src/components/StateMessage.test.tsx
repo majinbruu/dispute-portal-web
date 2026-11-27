@@ -17,7 +17,7 @@ describe('EmptyState', () => {
       <EmptyState
         title="No pending disputes"
         description="Disputes you raise will appear here."
-        action={<a href="/debit-orders">View debit orders</a>}
+        action={<a href="/transactions">View debit orders</a>}
       />,
     );
 

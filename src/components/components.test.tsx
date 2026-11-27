@@ -37,13 +37,13 @@ describe('Button', () => {
   it('renders a router link styled as a button', () => {
     render(
       <MemoryRouter>
-        <ButtonLink to="/debit-orders" variant="ghost">
+        <ButtonLink to="/transactions" variant="ghost">
           Back
         </ButtonLink>
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole('link', { name: 'Back' })).toHaveAttribute('href', '/debit-orders');
+    expect(screen.getByRole('link', { name: 'Back' })).toHaveAttribute('href', '/transactions');
   });
 });
 
@@ -67,14 +67,14 @@ describe('ItemList', () => {
       <MemoryRouter>
         <ItemList label="Debit orders">
           <ItemRow
-            to="/debit-orders/1"
+            to="/transactions/1"
             title="Gym Co"
             subtitle="GYMCO 123"
             value="R 499,00"
             meta="01 Mar 2026"
             badges={<Badge tone="success">Accepted</Badge>}
           />
-          <ItemRow to="/debit-orders/2" title="Insurer" />
+          <ItemRow to="/transactions/2" title="Insurer" />
         </ItemList>
       </MemoryRouter>,
     );
@@ -84,7 +84,7 @@ describe('ItemList', () => {
     expect(rows).toHaveLength(2);
 
     const first = within(rows[0]!).getByRole('link');
-    expect(first).toHaveAttribute('href', '/debit-orders/1');
+    expect(first).toHaveAttribute('href', '/transactions/1');
     expect(first).toHaveTextContent('Gym Co');
     expect(first).toHaveTextContent('GYMCO 123');
     expect(first).toHaveTextContent('R 499,00');
@@ -100,10 +100,10 @@ describe('ItemRow action', () => {
       <MemoryRouter>
         <ItemList label="Debit orders">
           <ItemRow
-            to="/debit-orders/1"
+            to="/transactions/1"
             title="Gym Co"
             action={
-              <ButtonLink to="/debit-orders/1/dispute" size="small">
+              <ButtonLink to="/transactions/1/dispute" size="small">
                 Dispute
               </ButtonLink>
             }
@@ -164,16 +164,16 @@ describe('PageHeader', () => {
         <PageHeader
           title="Debit order"
           description="Details of this collection."
-          back={{ to: '/debit-orders', label: 'My debit orders' }}
+          back={{ to: '/transactions', label: 'My transactions' }}
         />
       </MemoryRouter>,
     );
 
     expect(screen.getByRole('heading', { level: 1, name: 'Debit order' })).toBeInTheDocument();
     expect(screen.getByText('Details of this collection.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /My debit orders/ })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /My transactions/ })).toHaveAttribute(
       'href',
-      '/debit-orders',
+      '/transactions',
     );
   });
 
@@ -194,21 +194,21 @@ describe('TabNav', () => {
     render(
       <MemoryRouter initialEntries={['/disputes']}>
         <TabNav
-          label="Debit orders and disputes"
+          label="Transactions and disputes"
           tabs={[
-            { to: '/debit-orders', label: 'My debit orders' },
+            { to: '/transactions', label: 'My transactions' },
             { to: '/disputes', label: 'Dispute history' },
           ]}
         />
       </MemoryRouter>,
     );
 
-    const nav = screen.getByRole('navigation', { name: 'Debit orders and disputes' });
+    const nav = screen.getByRole('navigation', { name: 'Transactions and disputes' });
     expect(within(nav).getByRole('link', { name: 'Dispute history' })).toHaveAttribute(
       'aria-current',
       'page',
     );
-    expect(within(nav).getByRole('link', { name: 'My debit orders' })).not.toHaveAttribute(
+    expect(within(nav).getByRole('link', { name: 'My transactions' })).not.toHaveAttribute(
       'aria-current',
     );
   });

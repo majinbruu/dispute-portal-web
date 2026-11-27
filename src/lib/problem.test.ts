@@ -7,7 +7,7 @@ describe('parseProblem', () => {
         type: 'https://acme.example/problems/already-disputed',
         title: 'Already disputed',
         status: 409,
-        detail: 'This debit order has already been disputed.',
+        detail: 'This transaction has already been disputed.',
         code: 'already_disputed',
         traceId: '00-abc-def-01',
       },
@@ -18,7 +18,7 @@ describe('parseProblem', () => {
       status: 409,
       code: 'already_disputed',
       title: 'Already disputed',
-      detail: 'This debit order has already been disputed.',
+      detail: 'This transaction has already been disputed.',
       traceId: '00-abc-def-01',
     });
   });
@@ -30,7 +30,7 @@ describe('parseProblem', () => {
         detail: 'One or more fields are invalid.',
         code: 'validation_failed',
         errors: {
-          debitOrderId: ['Debit order is not valid.'],
+          transactionId: ['Transaction is not valid.'],
           reasonCode: 'Reason is required.',
           bad: [1],
         },
@@ -39,11 +39,11 @@ describe('parseProblem', () => {
     );
 
     expect(problem.errors).toEqual({
-      debitOrderId: ['Debit order is not valid.'],
+      transactionId: ['Transaction is not valid.'],
       reasonCode: ['Reason is required.'],
     });
     expect(validationMessages(problem)).toEqual([
-      'Debit order is not valid.',
+      'Transaction is not valid.',
       'Reason is required.',
     ]);
   });
