@@ -86,11 +86,29 @@ describe('dispute form', () => {
     expect(requestsTo(fetchMock, 'POST', '/api/v1/disputes')).toHaveLength(0);
   });
 
-  it('asks only for a reason', async () => {
-    renderForm();
-    await screen.findByRole('group', { name: 'Why are you disputing this debit order?' });
+  it('limits the optional comment to 1000 characters, not counting surrounding spaces', async () => {
+    const { user } = renderForm();
+    await user.click(
+      await screen.findByRole('radio', { name: 'I did not authorise this debit order (MD01)' }),
+    );
+    const comment = screen.getByRole('textbox', { name: 'Comment (optional)' });
+    expect(screen.getByText('1000 of 1000 characters remaining')).toBeInTheDocument();
 
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    await user.click(comment);
+    await user.paste(`  ${'x'.repeat(1000)}  `);
+    expect(screen.getByText('0 of 1000 characters remaining')).toBeInTheDocument();
+
+    await user.clear(comment);
+    await user.paste('x'.repeat(1001));
+    expect(screen.getByText('1 characters over the limit of 1000')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Comment must be 1000 characters or fewer',
+    );
+    expect(comment).toHaveAttribute('aria-invalid', 'true');
+    expect(comment).toHaveAccessibleDescription(/1 characters over the limit of 1000/);
+    expect(screen.queryByRole('heading', { name: 'Review your dispute' })).not.toBeInTheDocument();
   });
 
   it('shows a review step before anything is submitted, and lets the customer go back', async () => {
@@ -98,11 +116,16 @@ describe('dispute form', () => {
     await user.click(
       await screen.findByRole('radio', { name: 'The amount is not what I agreed to (AM09)' }),
     );
+    await user.type(
+      screen.getByRole('textbox', { name: 'Comment (optional)' }),
+      'I agreed to R399.',
+    );
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
     const heading = await screen.findByRole('heading', { name: 'Review your dispute' });
     expect(heading).toHaveFocus();
     expect(screen.getByText('The amount is not what I agreed to (AM09)')).toBeInTheDocument();
+    expect(screen.getByText('I agreed to R399.', { selector: 'dd *' })).toBeInTheDocument();
     expect(screen.getByText('DebiCheck', { selector: 'dd' })).toBeInTheDocument();
     expect(screen.getByText(/R\s499,00/, { selector: 'dd' })).toBeInTheDocument();
     expect(requestsTo(fetchMock, 'POST', '/api/v1/disputes')).toHaveLength(0);
@@ -112,6 +135,9 @@ describe('dispute form', () => {
     expect(
       await screen.findByRole('radio', { name: 'The amount is not what I agreed to (AM09)' }),
     ).toBeChecked();
+    expect(screen.getByRole('textbox', { name: 'Comment (optional)' })).toHaveValue(
+      'I agreed to R399.',
+    );
   });
 
   it('submits the dispute with an Idempotency-Key and opens the dispute', async () => {
@@ -132,6 +158,44 @@ describe('dispute form', () => {
       transactionId: TRANSACTION_ID,
       reasonId: 'not_authorised',
     });
+  });
+
+  it('sends the comment without its surrounding spaces', async () => {
+    const { user, fetchMock } = renderForm();
+    await user.click(
+      await screen.findByRole('radio', { name: 'I did not authorise this debit order (MD01)' }),
+    );
+    await user.type(
+      screen.getByRole('textbox', { name: 'Comment (optional)' }),
+      '  Never signed up.  ',
+    );
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await user.click(await screen.findByRole('button', { name: 'Submit dispute' }));
+    await screen.findByText('Dispute progress screen');
+
+    const [request] = requestsTo(fetchMock, 'POST', '/api/v1/disputes');
+    expect(await request!.clone().json()).toEqual({
+      transactionId: TRANSACTION_ID,
+      reasonId: 'not_authorised',
+      comment: 'Never signed up.',
+    });
+  });
+
+  it('says on the review step when no comment was given, and sends none', async () => {
+    const { user, fetchMock } = renderForm();
+    await user.click(
+      await screen.findByRole('radio', { name: 'I did not authorise this debit order (MD01)' }),
+    );
+    await user.type(screen.getByRole('textbox', { name: 'Comment (optional)' }), '   ');
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+
+    expect(await screen.findByText('None', { selector: 'dd' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Submit dispute' }));
+    await screen.findByText('Dispute progress screen');
+
+    const [request] = requestsTo(fetchMock, 'POST', '/api/v1/disputes');
+    expect(await request!.clone().json()).not.toHaveProperty('comment');
   });
 
   it('reuses the Idempotency-Key when the same submission is retried', async () => {

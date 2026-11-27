@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useId, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { useSubmitDispute } from '../../api/queries';
 import type { DisputeReason, SubmitDisputeRequest, Transaction } from '../../api/types';
@@ -12,6 +12,7 @@ import { formatDate, formatMoney } from '../../lib/format';
 import { disputeReasonLabel, mandateTypeLabel, transactionTypeNoun } from '../../lib/labels';
 import { type Problem, toProblem } from '../../lib/problem';
 import {
+  COMMENT_MAX_LENGTH,
   DISPUTE_FORM_DEFAULTS,
   disputeFormSchema,
   type DisputeFormValues,
@@ -30,7 +31,13 @@ interface DisputeFormProps {
 }
 
 function toRequest(transaction: Transaction, values: DisputeFormValues): SubmitDisputeRequest {
-  return { transactionId: transaction.id, reasonId: values.reasonId };
+  const comment = values.comment.trim();
+  return {
+    transactionId: transaction.id,
+    reasonId: values.reasonId,
+    // The comment is optional, so it is only sent when the customer wrote one.
+    ...(comment === '' ? {} : { comment }),
+  };
 }
 
 /** What the review step shows about the transaction; the facts differ by type. */
@@ -72,8 +79,8 @@ function SubmitError({ problem, transaction }: SubmitErrorProps) {
 }
 
 /**
- * The two-step dispute form: choose a reason, then review and submit. Nothing is sent until the
- * customer confirms on the review step.
+ * The two-step dispute form: choose a reason (with an optional comment), then review and
+ * submit. Nothing is sent until the customer confirms on the review step.
  */
 export function DisputeForm({ transaction, reasons }: DisputeFormProps) {
   const id = useId();
@@ -88,11 +95,13 @@ export function DisputeForm({ transaction, reasons }: DisputeFormProps) {
     register,
     handleSubmit,
     getValues,
+    control,
     formState: { errors },
   } = useForm<DisputeFormValues>({
     resolver: zodResolver(disputeFormSchema),
     defaultValues: DISPUTE_FORM_DEFAULTS,
   });
+  const comment = useWatch({ control, name: 'comment' });
 
   useEffect(() => {
     // Moving between steps replaces the content, so move focus to the new step's heading for
@@ -134,6 +143,15 @@ export function DisputeForm({ transaction, reasons }: DisputeFormProps) {
                 label: 'Reason',
                 value: reason ? disputeReasonLabel(reason.label, reason.code) : values.reasonId,
               },
+              {
+                label: 'Comment',
+                value:
+                  values.comment.trim() === '' ? (
+                    'None'
+                  ) : (
+                    <span className={styles.comment}>{values.comment.trim()}</span>
+                  ),
+              },
             ]}
           />
         </Card>
@@ -164,6 +182,10 @@ export function DisputeForm({ transaction, reasons }: DisputeFormProps) {
   }
 
   const reasonErrorId = `${id}-reason-error`;
+  const commentId = `${id}-comment`;
+  const commentHintId = `${id}-comment-hint`;
+  const commentErrorId = `${id}-comment-error`;
+  const remaining = COMMENT_MAX_LENGTH - comment.trim().length;
 
   return (
     <form
@@ -201,6 +223,30 @@ export function DisputeForm({ transaction, reasons }: DisputeFormProps) {
           </p>
         ) : null}
       </fieldset>
+
+      <div className={styles.field}>
+        <label htmlFor={commentId} className={styles.label}>
+          Comment <span className={styles.optional}>(optional)</span>
+        </label>
+        <textarea
+          id={commentId}
+          className={styles.textarea}
+          rows={4}
+          aria-invalid={errors.comment ? true : undefined}
+          aria-describedby={errors.comment ? `${commentHintId} ${commentErrorId}` : commentHintId}
+          {...register('comment')}
+        />
+        <p id={commentHintId} className={styles.hint}>
+          {remaining >= 0
+            ? `${remaining} of ${COMMENT_MAX_LENGTH} characters remaining`
+            : `${-remaining} characters over the limit of ${COMMENT_MAX_LENGTH}`}
+        </p>
+        {errors.comment ? (
+          <p id={commentErrorId} className={styles.fieldError} role="alert">
+            {errors.comment.message}
+          </p>
+        ) : null}
+      </div>
 
       <div className={styles.actions}>
         <Button type="submit">Continue</Button>
