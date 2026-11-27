@@ -24,7 +24,7 @@ import {
 import { toProblem } from '../../lib/problem';
 import { describeActionError } from '../disputes/actionErrors';
 import { Comments, type CommentView } from '../disputes/Comments';
-import { DISPUTE_STATUS_TONE } from '../disputes/presentation';
+import { DISPUTE_STATUS_TONE, disputeEventKey } from '../disputes/presentation';
 import styles from './Agent.module.css';
 import { ReviewActions } from './ReviewActions';
 
@@ -40,8 +40,8 @@ function actorName(actor: string, subjectId: string | null): string {
 function toTimelineItems(dispute: AgentDisputeDetail): TimelineItem[] {
   return [...dispute.events]
     .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt))
-    .map((event) => ({
-      id: `${event.status}-${event.occurredAt}`,
+    .map((event, position) => ({
+      id: disputeEventKey(event, position),
       occurredAt: event.occurredAt,
       title: disputeStatusLabel(event.status),
       description: event.description,

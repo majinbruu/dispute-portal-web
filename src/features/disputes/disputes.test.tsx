@@ -173,6 +173,23 @@ describe('dispute history', () => {
 });
 
 describe('dispute progress', () => {
+  it('shows two steps with the same status and time as separate steps', async () => {
+    const consoleError = vi.spyOn(console, 'error');
+    const step = disputeDetail().events[0]!;
+    renderApp({
+      routes: disputeRoutes,
+      at: `/disputes/${DISPUTE_ID}`,
+      api: { [DETAIL]: disputeDetail({ events: [step, { ...step }] }) },
+    });
+
+    const steps = within(
+      await screen.findByRole('list', { name: 'Dispute progress' }),
+    ).getAllByRole('listitem');
+    expect(steps).toHaveLength(2);
+    // React reports two list items with the same key through console.error.
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
   it('shows the timeline in chronological order with the dispute details', async () => {
     renderApp({
       routes: disputeRoutes,

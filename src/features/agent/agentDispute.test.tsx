@@ -197,6 +197,18 @@ describe('agent dispute page', () => {
     expect(details).toHaveTextContent('OutcomeR 499,00 was paid back into the account.');
   });
 
+  it('shows two steps with the same status and time as separate steps', async () => {
+    const consoleError = vi.spyOn(console, 'error');
+    renderDispute(agentDisputeDetail({ events: [submittedEvent, { ...submittedEvent }] }));
+
+    const steps = within(await screen.findByRole('list', { name: 'Audit trail' })).getAllByRole(
+      'listitem',
+    );
+    expect(steps).toHaveLength(2);
+    // React reports two list items with the same key through console.error.
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
   it('shows a not-found problem with its trace ID', async () => {
     renderDispute(() => problemResponse(404, 'dispute_not_found', 'The dispute was not found.'));
 

@@ -20,7 +20,7 @@ import { toProblem } from '../../lib/problem';
 import { describeActionError } from './actionErrors';
 import { Comments, type CommentView } from './Comments';
 import styles from './Disputes.module.css';
-import { DISPUTE_STATUS_DESCRIPTION, DISPUTE_STATUS_TONE } from './presentation';
+import { DISPUTE_STATUS_DESCRIPTION, DISPUTE_STATUS_TONE, disputeEventKey } from './presentation';
 import { useDisputeStatusSync } from './useDisputeStatusSync';
 import { WithdrawDispute } from './WithdrawDispute';
 
@@ -30,8 +30,8 @@ const BACK = { to: '/disputes', label: 'Dispute history' };
 function toTimelineItems(dispute: DisputeDetail): TimelineItem[] {
   return [...dispute.events]
     .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt))
-    .map((event) => ({
-      id: `${event.status}-${event.occurredAt}`,
+    .map((event, position) => ({
+      id: disputeEventKey(event, position),
       occurredAt: event.occurredAt,
       title: disputeStatusLabel(event.status),
       description: event.description,

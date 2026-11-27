@@ -12,6 +12,19 @@ export const DISPUTE_STATUS_DESCRIPTION: Record<DisputeStatus, string> = {
   Withdrawn: 'You withdrew this dispute before it was reviewed, so nothing was processed.',
 };
 
+/**
+ * React key for a dispute event at its position in the timeline, oldest first. The API gives an
+ * event no ID, and status and time alone could repeat, so the position makes the key unique. A
+ * position is a safe key here because events are only ever appended: one that is already on the
+ * page keeps its place.
+ */
+export function disputeEventKey(
+  event: { status: DisputeStatus; occurredAt: string },
+  position: number,
+): string {
+  return `${position}-${event.status}-${event.occurredAt}`;
+}
+
 export const DISPUTE_STATUS_TONE: Record<DisputeStatus, BadgeTone> = {
   Submitted: 'info',
   SentToScheme: 'warning',
