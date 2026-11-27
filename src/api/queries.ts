@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toNumber } from '../lib/format';
+import { isConflict } from '../lib/problem';
 import { useApiClient } from './apiContext';
 import { unwrap } from './client';
 import { normalizePaged } from './paging';
@@ -12,7 +13,7 @@ import {
 } from './queryKeys';
 import type { SubmitDisputeRequest } from './types';
 
-/** How often a pending dispute is re-read while the scheme is still deciding its outcome. */
+/** How often a pending dispute is re-read while it waits for review or for its outcome. */
 export const PENDING_DISPUTE_POLL_MS = 3_000;
 const UNREAD_COUNT_POLL_MS = 30_000;
 const REFERENCE_DATA_STALE_MS = 5 * 60_000;
@@ -142,8 +143,9 @@ export function useDisputes(filters: DisputeFilters) {
 }
 
 /**
- * One dispute with its timeline. While it is pending it is polled, because a background job
- * moves it to its outcome within about half a minute; polling stops once it is completed.
+ * One dispute with its timeline. While it is pending it is polled, because an agent's decision
+ * and then the scheme's outcome arrive without the customer doing anything; polling stops once it
+ * is completed.
  */
 export function useDispute(id: string) {
   const api = useApiClient();
@@ -153,6 +155,27 @@ export function useDispute(id: string) {
       unwrap(api.GET('/api/v1/disputes/{id}', { params: { path: { id } }, signal })),
     refetchInterval: (query) =>
       query.state.data?.state === 'Pending' ? PENDING_DISPUTE_POLL_MS : false,
+  });
+}
+
+/**
+ * Withdraws the customer's own dispute. A 409 means an agent reviewed it first, so the dispute
+ * is re-read and the screen shows what happened instead.
+ */
+export function useWithdrawDispute(id: string) {
+  const api = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      unwrap(api.POST('/api/v1/disputes/{id}/withdraw', { params: { path: { id } } })),
+    onSuccess: (dispute) => {
+      queryClient.setQueryData(queryKeys.disputes.detail(id), dispute);
+    },
+    onError: (error) => {
+      if (isConflict(error)) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.disputes.detail(id) });
+      }
+    },
   });
 }
 

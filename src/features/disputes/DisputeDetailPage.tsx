@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router';
-import { useDispute } from '../../api/queries';
+import { useDispute, useWithdrawDispute } from '../../api/queries';
 import type { DisputeDetail } from '../../api/types';
 import { Badge } from '../../components/Badge';
 import { Card } from '../../components/Card';
@@ -7,6 +7,7 @@ import { DescriptionList } from '../../components/DescriptionList';
 import { ErrorState } from '../../components/ErrorState';
 import { PageHeader } from '../../components/PageHeader';
 import { Spinner } from '../../components/Spinner';
+import { SuccessMessage } from '../../components/SuccessMessage';
 import { Timeline, type TimelineItem } from '../../components/Timeline';
 import { formatDate, formatDateTime, formatMoney } from '../../lib/format';
 import {
@@ -16,9 +17,11 @@ import {
   transactionTypeLabel,
 } from '../../lib/labels';
 import { toProblem } from '../../lib/problem';
+import { describeActionError } from './actionErrors';
 import styles from './Disputes.module.css';
-import { DISPUTE_STATUS_TONE } from './presentation';
+import { DISPUTE_STATUS_DESCRIPTION, DISPUTE_STATUS_TONE } from './presentation';
 import { useDisputeStatusSync } from './useDisputeStatusSync';
+import { WithdrawDispute } from './WithdrawDispute';
 
 const TITLE = 'Dispute progress';
 const BACK = { to: '/disputes', label: 'Dispute history' };
@@ -37,6 +40,7 @@ function toTimelineItems(dispute: DisputeDetail): TimelineItem[] {
 function Details({ dispute }: { dispute: DisputeDetail }) {
   const isPending = dispute.state === 'Pending';
   const isCard = dispute.transactionType === 'Card';
+  const withdraw = useWithdrawDispute(dispute.id);
   return (
     <div className={styles.stack}>
       <Card>
@@ -53,6 +57,24 @@ function Details({ dispute }: { dispute: DisputeDetail }) {
           </Badge>
           <Badge>{isPending ? 'Pending' : 'Completed'}</Badge>
         </div>
+        <p>{DISPUTE_STATUS_DESCRIPTION[dispute.status]}</p>
+        {/* Only a dispute that still waits for review can be withdrawn. */}
+        {dispute.status === 'Submitted' ? (
+          <WithdrawDispute
+            onConfirm={() => {
+              withdraw.mutate();
+            }}
+            pending={withdraw.isPending}
+          />
+        ) : null}
+        {withdraw.isSuccess ? <SuccessMessage>Your dispute was withdrawn.</SuccessMessage> : null}
+        {/* Shown here, not in the confirmation step: after a 409 that step is no longer on the page. */}
+        {withdraw.isError ? (
+          <ErrorState
+            problem={describeActionError(withdraw.error)}
+            title="Your dispute was not withdrawn"
+          />
+        ) : null}
       </Card>
 
       <Card title={TITLE}>
@@ -109,7 +131,7 @@ function Details({ dispute }: { dispute: DisputeDetail }) {
 
 export function DisputeDetailPage() {
   const { id = '' } = useParams();
-  // Polls every 3 seconds while the dispute is pending; see useDispute.
+  // Re-read every few seconds while the dispute is pending; see useDispute.
   const query = useDispute(id);
   useDisputeStatusSync(query.data?.status);
 

@@ -156,8 +156,8 @@ export function DisputeForm({ transaction, reasons }: DisputeFormProps) {
           />
         </Card>
         <p className={styles.note}>
-          By submitting you confirm that the information above is correct. We will let you know the
-          outcome in your inbox.
+          By submitting you confirm that the information above is correct. ACME Bank will review
+          your dispute and let you know the outcome in your inbox.
         </p>
         {submit.isError ? (
           <SubmitError problem={toProblem(submit.error)} transaction={transaction} />

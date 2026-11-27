@@ -313,3 +313,223 @@ describe('dispute progress', () => {
     });
   });
 });
+
+describe('withdrawing a dispute', () => {
+  const WITHDRAW = `POST /api/v1/disputes/${DISPUTE_ID}/withdraw`;
+  const withdrawPath = `/api/v1/disputes/${DISPUTE_ID}/withdraw`;
+
+  const withdrawn = disputeDetail({
+    status: 'Withdrawn',
+    state: 'Completed',
+    completedAt: '2026-03-05T09:00:00Z',
+    events: [
+      {
+        status: 'Submitted',
+        description: 'We received your dispute.',
+        actor: 'Customer',
+        occurredAt: '2026-03-05T08:15:00Z',
+      },
+      {
+        status: 'Withdrawn',
+        description: 'You withdrew your dispute.',
+        actor: 'Customer',
+        occurredAt: '2026-03-05T09:00:00Z',
+      },
+    ],
+  });
+
+  const approved = disputeDetail({
+    status: 'SentToScheme',
+    events: [
+      {
+        status: 'Submitted',
+        description: 'We received your dispute.',
+        actor: 'Customer',
+        occurredAt: '2026-03-05T08:15:00Z',
+      },
+      {
+        status: 'SentToScheme',
+        description: 'Your dispute was approved and sent for processing.',
+        actor: 'Agent',
+        occurredAt: '2026-03-05T08:50:00Z',
+      },
+    ],
+  });
+
+  it('says a submitted dispute is waiting for review and offers to withdraw it', async () => {
+    renderApp({
+      routes: disputeRoutes,
+      at: `/disputes/${DISPUTE_ID}`,
+      api: { [DETAIL]: disputeDetail() },
+    });
+
+    expect(
+      await screen.findByText(
+        'Your dispute is waiting for review by ACME Bank. You can withdraw it until it has been reviewed.',
+      ),
+    ).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Withdraw dispute' })).toBeEnabled();
+  });
+
+  it.each([
+    ['Processing', approved],
+    ['Refunded', refunded],
+    ['Withdrawn', withdrawn],
+  ])('does not offer to withdraw a dispute that is %s', async (label, dispute) => {
+    renderApp({
+      routes: disputeRoutes,
+      at: `/disputes/${DISPUTE_ID}`,
+      api: { [DETAIL]: dispute },
+    });
+
+    expect(await screen.findByText(label, { selector: 'span' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Withdraw dispute' })).not.toBeInTheDocument();
+  });
+
+  it('asks for confirmation in the page before anything is sent, and can be cancelled', async () => {
+    const confirmDialog = vi.spyOn(window, 'confirm');
+    const { user, fetchMock } = renderApp({
+      routes: disputeRoutes,
+      at: `/disputes/${DISPUTE_ID}`,
+      api: { [DETAIL]: disputeDetail(), [WITHDRAW]: withdrawn },
+    });
+
+    await user.click(await screen.findByRole('button', { name: 'Withdraw dispute' }));
+
+    const step = screen.getByRole('group', { name: 'Withdraw this dispute?' });
+    expect(screen.getByRole('heading', { name: 'Withdraw this dispute?' })).toHaveFocus();
+    expect(step).toHaveTextContent('This cannot be undone.');
+    expect(confirmDialog).not.toHaveBeenCalled();
+    expect(requestsTo(fetchMock, 'POST', withdrawPath)).toHaveLength(0);
+
+    await user.click(within(step).getByRole('button', { name: 'Keep dispute' }));
+
+    expect(screen.queryByRole('group', { name: 'Withdraw this dispute?' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Withdraw dispute' })).toHaveFocus();
+    expect(requestsTo(fetchMock, 'POST', withdrawPath)).toHaveLength(0);
+  });
+
+  it('withdraws the dispute once confirmed and shows it as withdrawn', async () => {
+    const { user, fetchMock, queryClient } = renderApp({
+      routes: disputeRoutes,
+      at: `/disputes/${DISPUTE_ID}`,
+      api: { [DETAIL]: disputeDetail(), [WITHDRAW]: withdrawn },
+    });
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+    await user.click(await screen.findByRole('button', { name: 'Withdraw dispute' }));
+    await user.click(screen.getByRole('button', { name: 'Yes, withdraw dispute' }));
+
+    const result = await screen.findByText('Your dispute was withdrawn.');
+    expect(result).toHaveRole('status');
+    expect(result).toHaveFocus();
+    expect(screen.getByText('Withdrawn', { selector: 'span' })).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'You withdrew this dispute before it was reviewed, so nothing was processed.',
+      ),
+    ).toBeVisible();
+    expect(screen.queryByRole('button', { name: /withdraw/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Checking for updates…')).not.toBeInTheDocument();
+    const steps = within(screen.getByRole('list', { name: 'Dispute progress' })).getAllByRole(
+      'listitem',
+    );
+    expect(steps[1]).toHaveTextContent('You withdrew your dispute.');
+
+    const [request] = requestsTo(fetchMock, 'POST', withdrawPath);
+    expect(await request!.text()).toBe('');
+
+    // The transaction can be disputed again, and the lists and the inbox have changed.
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.disputes.lists });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.transactions.all });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.notifications.all });
+  });
+
+  it('disables both buttons while the withdrawal is being sent', async () => {
+    let finish: (response: Response) => void = () => undefined;
+    const { user } = renderApp({
+      routes: disputeRoutes,
+      at: `/disputes/${DISPUTE_ID}`,
+      api: {
+        [DETAIL]: disputeDetail(),
+        [WITHDRAW]: () =>
+          new Promise<Response>((resolve) => {
+            finish = resolve;
+          }),
+      },
+    });
+
+    await user.click(await screen.findByRole('button', { name: 'Withdraw dispute' }));
+    await user.click(screen.getByRole('button', { name: 'Yes, withdraw dispute' }));
+
+    expect(await screen.findByRole('button', { name: 'Withdrawing…' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Keep dispute' })).toBeDisabled();
+
+    finish(jsonResponse(withdrawn));
+    expect(await screen.findByText('Your dispute was withdrawn.')).toBeInTheDocument();
+  });
+
+  it('explains when an agent reviewed the dispute first, and shows its latest status', async () => {
+    let reviewed = false;
+    const { user } = renderApp({
+      routes: disputeRoutes,
+      at: `/disputes/${DISPUTE_ID}`,
+      api: {
+        [DETAIL]: () => jsonResponse(reviewed ? approved : disputeDetail()),
+        [WITHDRAW]: () => {
+          reviewed = true;
+          return problemResponse(
+            409,
+            'dispute_not_withdrawable',
+            'This dispute can no longer be withdrawn because it has already been reviewed.',
+          );
+        },
+      },
+    });
+
+    await user.click(await screen.findByRole('button', { name: 'Withdraw dispute' }));
+    await user.click(screen.getByRole('button', { name: 'Yes, withdraw dispute' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Your dispute was not withdrawn');
+    expect(alert).toHaveTextContent(
+      'It has already been reviewed, so it can no longer be withdrawn. This page now shows its latest status.',
+    );
+    expect(alert).toHaveTextContent('trace-dispute_not_withdrawable');
+
+    // The page was re-read: it shows the agent's decision and no longer offers to withdraw.
+    expect(await screen.findByText('Processing', { selector: 'span' })).toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: 'Withdraw this dispute?' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /withdraw/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Your dispute was not withdrawn');
+  });
+
+  it('keeps the confirmation step open after any other failure, so it can be tried again', async () => {
+    let attempts = 0;
+    const { user } = renderApp({
+      routes: disputeRoutes,
+      at: `/disputes/${DISPUTE_ID}`,
+      api: {
+        [DETAIL]: disputeDetail(),
+        [WITHDRAW]: () => {
+          attempts += 1;
+          return attempts === 1
+            ? problemResponse(500, 'internal_error', 'Something broke on our side.')
+            : jsonResponse(withdrawn);
+        },
+      },
+    });
+
+    await user.click(await screen.findByRole('button', { name: 'Withdraw dispute' }));
+    await user.click(screen.getByRole('button', { name: 'Yes, withdraw dispute' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Your dispute was not withdrawn');
+    expect(alert).toHaveTextContent('Something broke on our side.');
+
+    await user.click(screen.getByRole('button', { name: 'Yes, withdraw dispute' }));
+
+    expect(await screen.findByText('Your dispute was withdrawn.')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+});

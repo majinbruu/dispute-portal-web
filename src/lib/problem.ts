@@ -128,6 +128,14 @@ export function toProblem(error: unknown): Problem {
   return { status: 0, ...GENERIC_FALLBACK };
 }
 
+/**
+ * True when the API refused a change because the record had already changed: someone else acted
+ * on it first, so what the screen shows is out of date.
+ */
+export function isConflict(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 409;
+}
+
 /** Flattens field-level validation messages into a list for display. */
 export function validationMessages(problem: Problem): string[] {
   return Object.values(problem.errors ?? {}).flat();
