@@ -53,7 +53,7 @@ A **Dispute** button appears only on transactions the API reports as disputable.
 | Dispute queue | `/agent`              | See the disputes of all customers, those waiting for review first and the oldest of them at the top. Filter by status and transaction type, and search by dispute reference |
 | Dispute       | `/agent/disputes/:id` | See the dispute, the disputed transaction, the audit trail and the comment thread. Approve the dispute, reject it with a reason, or add a comment                           |
 
-**Reviewing.** **Approve** and **Reject** are offered only while a dispute is Submitted. Neither acts on its own: each opens a confirmation step in the page. Rejecting needs a reason of up to 500 characters, which the customer sees as the outcome of the dispute. Approving sends the dispute for processing; the outcome after that comes from the API's simulated scheme. An agent can add comments while the dispute is Submitted or Processing, and the customer gets an inbox message for each one.
+**Reviewing.** **Approve** and **Reject** are offered only while a dispute is Submitted. Neither acts on its own: each opens a confirmation step in the page. Rejecting needs a reason of up to 500 characters, which the customer sees as the outcome of the dispute. Approving sends the dispute for processing; the outcome after that comes from the API's simulated scheme. An agent can add comments while the dispute is Submitted or Processing, and the customer gets an inbox message for each one. An agent cannot approve, reject or comment on a dispute they raised themselves as a customer: the API refuses it, and the page says that another agent must review it.
 
 **What an agent sees.** The audit trail says who caused each step: the customer, an agent or the system. Customers and agents are shown by their ID, not by name. An agent has no transactions, mandates or inbox of their own, and no links into the customer pages.
 
@@ -258,9 +258,9 @@ They cover:
 - sign-in: the sign-in screen, the callback, the return to the page the user asked for, the in-memory session, and reading the role from the token;
 - routing by role: a customer gets the customer pages, an agent gets the agent pages, each gets "Page not found" for the other's pages, and an account with neither role gets the no-access screen;
 - each customer screen: both transaction tabs with their filters, both kinds of detail page, the dispute form with its idempotency key and the message shown for each API error, dispute history, the dispute page with polling, withdrawal and comments, mandates and the inbox;
-- the agent screens: the queue with its filters and search, and the review page with approve, reject, comments and the conflict cases.
+- the agent screens: the queue with its filters and search, and the review page with approve, reject, comments, the conflict cases and the refusal of an agent's own dispute.
 
-`npm run test:coverage` reports coverage for all of `src` and fails below these thresholds, which apply to each of `src/auth`, `src/lib`, `src/components` and `src/features/agent`:
+`npm run test:coverage` reports coverage for all of `src` and fails below these thresholds, which apply to each of `src/auth`, `src/lib`, `src/components` and `src/features` (every feature folder together):
 
 | Measure    | Threshold |
 | ---------- | --------- |
