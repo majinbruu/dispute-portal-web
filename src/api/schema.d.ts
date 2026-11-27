@@ -47,7 +47,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Approves a dispute that waits for review, which sends it for processing. Returns 409 if it was already reviewed or withdrawn. */
+    /** Approves a dispute that waits for review, which sends it for processing. Returns 409 if it was already reviewed or withdrawn, and 403 if the agent raised the dispute themselves. */
     post: operations['ApproveDispute'];
     delete?: never;
     options?: never;
@@ -64,7 +64,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Rejects a dispute that waits for review. The reason is shown to the customer as the outcome. Returns 409 if it was already reviewed or withdrawn. */
+    /** Rejects a dispute that waits for review. The reason is shown to the customer as the outcome. Returns 409 if it was already reviewed or withdrawn, and 403 if the agent raised the dispute themselves. */
     post: operations['RejectDispute'];
     delete?: never;
     options?: never;
@@ -81,7 +81,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Adds an agent's comment to a dispute while it is open. The customer is notified in their inbox. Returns 409 once the dispute is closed. */
+    /** Adds an agent's comment to a dispute while it is open. The customer is notified in their inbox. Returns 409 once the dispute is closed, and 403 if the agent raised the dispute themselves. */
     post: operations['AddDisputeCommentAsAgent'];
     delete?: never;
     options?: never;
@@ -797,6 +797,17 @@ export interface operations {
           'text/json': components['schemas']['AgentDisputeDetailDto'];
         };
       };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
       /** @description Not Found */
       404: {
         headers: {
@@ -860,6 +871,17 @@ export interface operations {
           'text/json': components['schemas']['ValidationProblemDetails'];
         };
       };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
       /** @description Not Found */
       404: {
         headers: {
@@ -921,6 +943,17 @@ export interface operations {
           'text/plain': components['schemas']['ValidationProblemDetails'];
           'application/json': components['schemas']['ValidationProblemDetails'];
           'text/json': components['schemas']['ValidationProblemDetails'];
+        };
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
         };
       };
       /** @description Not Found */

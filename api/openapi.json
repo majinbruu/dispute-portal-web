@@ -178,7 +178,7 @@
         "tags": [
           "Agent"
         ],
-        "summary": "Approves a dispute that waits for review, which sends it for processing. Returns 409 if it was already reviewed or withdrawn.",
+        "summary": "Approves a dispute that waits for review, which sends it for processing. Returns 409 if it was already reviewed or withdrawn, and 403 if the agent raised the dispute themselves.",
         "operationId": "ApproveDispute",
         "parameters": [
           {
@@ -208,6 +208,26 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AgentDisputeDetailDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
@@ -260,7 +280,7 @@
         "tags": [
           "Agent"
         ],
-        "summary": "Rejects a dispute that waits for review. The reason is shown to the customer as the outcome. Returns 409 if it was already reviewed or withdrawn.",
+        "summary": "Rejects a dispute that waits for review. The reason is shown to the customer as the outcome. Returns 409 if it was already reviewed or withdrawn, and 403 if the agent raised the dispute themselves.",
         "operationId": "RejectDispute",
         "parameters": [
           {
@@ -334,6 +354,26 @@
               }
             }
           },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -382,7 +422,7 @@
         "tags": [
           "Agent"
         ],
-        "summary": "Adds an agent's comment to a dispute while it is open. The customer is notified in their inbox. Returns 409 once the dispute is closed.",
+        "summary": "Adds an agent's comment to a dispute while it is open. The customer is notified in their inbox. Returns 409 once the dispute is closed, and 403 if the agent raised the dispute themselves.",
         "operationId": "AddDisputeCommentAsAgent",
         "parameters": [
           {
@@ -452,6 +492,26 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
