@@ -59,3 +59,40 @@ jobs:
 
       - name: Build image
         run: docker build -t dispute-portal-web:ci .
+
+  publish:
+    name: Publish image
+    # Only for commits that reach main, and only after every check above has passed. Pull requests never publish.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [verify, docker]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # The only job that may write packages. The token is the workflow's own, so there is no stored registry secret.
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build image
+        # The labels link the package to this repository and record the exact commit it was built from.
+        run: >
+          docker build
+          --tag "$IMAGE:latest" --tag "$IMAGE:$GITHUB_SHA"
+          --label "org.opencontainers.image.source=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+          --label "org.opencontainers.image.revision=$GITHUB_SHA"
+          --label "org.opencontainers.image.title=ACME Bank Dispute Portal web app"
+          --label "org.opencontainers.image.description=React front end for the ACME Bank Dispute Portal, served by nginx"
+          .
+
+      - name: Sign in to GitHub Container Registry
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image
+        run: docker push --all-tags "$IMAGE"
