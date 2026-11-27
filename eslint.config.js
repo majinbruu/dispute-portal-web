@@ -6,7 +6,17 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'node_modules', 'public/config.js', 'src/api/schema.d.ts'] },
+  {
+    ignores: [
+      'dist',
+      'coverage',
+      'node_modules',
+      'playwright-report',
+      'test-results',
+      'public/config.js',
+      'src/api/schema.d.ts',
+    ],
+  },
   js.configs.recommended,
   {
     files: ['src/**/*.{ts,tsx}'],
@@ -38,6 +48,19 @@ export default tseslint.config(
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/unbound-method': 'off',
       'react-refresh/only-export-components': 'off',
+    },
+  },
+  {
+    // The end-to-end journeys run in Node and drive a browser: the same strictness, no React rules.
+    files: ['e2e/**/*.ts', 'playwright.config.ts'],
+    extends: [...tseslint.configs.strictTypeChecked, ...tseslint.configs.stylisticTypeChecked],
+    languageOptions: {
+      globals: globals.node,
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+    rules: {
+      '@typescript-eslint/consistent-type-imports': 'error',
+      eqeqeq: ['error', 'always'],
     },
   },
   {

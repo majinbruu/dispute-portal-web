@@ -34,6 +34,8 @@ export default defineConfig({
   },
   test: {
     globals: true,
+    // Unit tests only: the Playwright journeys in e2e/ have a runner of their own.
+    include: ['src/**/*.test.{ts,tsx}'],
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     restoreMocks: true,
