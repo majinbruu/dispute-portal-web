@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router';
-import { useDispute, useWithdrawDispute } from '../../api/queries';
+import { useAddDisputeComment, useDispute, useWithdrawDispute } from '../../api/queries';
 import type { DisputeDetail } from '../../api/types';
 import { Badge } from '../../components/Badge';
 import { Card } from '../../components/Card';
@@ -18,6 +18,7 @@ import {
 } from '../../lib/labels';
 import { toProblem } from '../../lib/problem';
 import { describeActionError } from './actionErrors';
+import { Comments, type CommentView } from './Comments';
 import styles from './Disputes.module.css';
 import { DISPUTE_STATUS_DESCRIPTION, DISPUTE_STATUS_TONE } from './presentation';
 import { useDisputeStatusSync } from './useDisputeStatusSync';
@@ -37,10 +38,21 @@ function toTimelineItems(dispute: DisputeDetail): TimelineItem[] {
     }));
 }
 
+/** The customer is not told which agent wrote a comment: an agent speaks for the bank. */
+function toCommentViews(dispute: DisputeDetail): CommentView[] {
+  return dispute.comments.map((comment) => ({
+    id: comment.id,
+    author: comment.authorType === 'Customer' ? 'You' : 'ACME Bank',
+    body: comment.body,
+    createdAt: comment.createdAt,
+  }));
+}
+
 function Details({ dispute }: { dispute: DisputeDetail }) {
   const isPending = dispute.state === 'Pending';
   const isCard = dispute.transactionType === 'Card';
   const withdraw = useWithdrawDispute(dispute.id);
+  const addComment = useAddDisputeComment(dispute.id);
   return (
     <div className={styles.stack}>
       <Card>
@@ -85,6 +97,13 @@ function Details({ dispute }: { dispute: DisputeDetail }) {
           </div>
         ) : null}
       </Card>
+
+      {/* A pending dispute is an open one: waiting for review or being processed. */}
+      <Comments
+        comments={toCommentViews(dispute)}
+        canComment={isPending}
+        onAdd={addComment.mutateAsync}
+      />
 
       <Card title="Dispute details">
         <DescriptionList

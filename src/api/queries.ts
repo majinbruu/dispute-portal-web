@@ -179,6 +179,29 @@ export function useWithdrawDispute(id: string) {
   });
 }
 
+/**
+ * Adds the customer's comment to their dispute. A 409 means the dispute was closed in the
+ * meantime, so it is re-read and the screen shows what happened instead.
+ */
+export function useAddDisputeComment(id: string) {
+  const api = useApiClient();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: string) =>
+      unwrap(
+        api.POST('/api/v1/disputes/{id}/comments', { params: { path: { id } }, body: { body } }),
+      ),
+    onSuccess: (dispute) => {
+      queryClient.setQueryData(queryKeys.disputes.detail(id), dispute);
+    },
+    onError: (error) => {
+      if (isConflict(error)) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.disputes.detail(id) });
+      }
+    },
+  });
+}
+
 export function useNotifications(filters: NotificationFilters) {
   const api = useApiClient();
   return useQuery({

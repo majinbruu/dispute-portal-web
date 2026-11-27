@@ -533,3 +533,182 @@ describe('withdrawing a dispute', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
+
+describe('dispute comments', () => {
+  const COMMENT = `POST /api/v1/disputes/${DISPUTE_ID}/comments`;
+  const commentPath = `/api/v1/disputes/${DISPUTE_ID}/comments`;
+
+  const thread = [
+    {
+      id: 'c-1',
+      authorType: 'Customer' as const,
+      body: 'I cancelled this membership in January.',
+      createdAt: '2026-03-05T08:15:00Z',
+    },
+    {
+      id: 'c-2',
+      authorType: 'Agent' as const,
+      body: 'Thank you.\nDo you have the cancellation reference?',
+      createdAt: '2026-03-05T09:30:00Z',
+    },
+  ];
+  const reply = {
+    id: 'c-3',
+    authorType: 'Customer' as const,
+    body: 'Yes, it is CAN-7781.',
+    createdAt: '2026-03-05T10:00:00Z',
+  };
+
+  function renderDispute(dispute: unknown, comment?: (request: Request) => Response) {
+    return renderApp({
+      routes: disputeRoutes,
+      at: `/disputes/${DISPUTE_ID}`,
+      api: {
+        [DETAIL]: dispute as Record<string, unknown>,
+        ...(comment ? { [COMMENT]: comment } : {}),
+      },
+    });
+  }
+
+  it('shows the thread oldest first, without naming the agent', async () => {
+    renderDispute(disputeDetail({ comments: thread }));
+
+    const items = within(await screen.findByRole('list', { name: 'Comments' })).getAllByRole(
+      'listitem',
+    );
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent('You');
+    expect(items[0]).toHaveTextContent('I cancelled this membership in January.');
+    expect(within(items[0]!).getByText(/05 Mar 2026/)).toHaveAttribute(
+      'datetime',
+      '2026-03-05T08:15:00Z',
+    );
+    expect(items[1]).toHaveTextContent('ACME Bank');
+    expect(items[1]).toHaveTextContent('Do you have the cancellation reference?');
+  });
+
+  it('invites a first comment while the dispute is open', async () => {
+    renderDispute(disputeDetail());
+
+    const comments = await screen.findByRole('region', { name: 'Comments' });
+    expect(comments).toHaveTextContent('No comments yet.');
+    expect(within(comments).getByRole('textbox', { name: 'Add a comment' })).toHaveValue('');
+    expect(within(comments).getByText('1000 of 1000 characters remaining')).toBeInTheDocument();
+  });
+
+  it('adds a comment, shows it in the thread and clears the field', async () => {
+    const { user, fetchMock } = renderDispute(disputeDetail({ comments: thread }), () =>
+      jsonResponse(disputeDetail({ comments: [...thread, reply] })),
+    );
+
+    const field = await screen.findByRole('textbox', { name: 'Add a comment' });
+    await user.type(field, '  Yes, it is CAN-7781.  ');
+    await user.click(screen.getByRole('button', { name: 'Add comment' }));
+
+    const list = screen.getByRole('list', { name: 'Comments' });
+    await waitFor(() => {
+      expect(within(list).getAllByRole('listitem')).toHaveLength(3);
+    });
+    expect(within(list).getAllByRole('listitem')[2]).toHaveTextContent('Yes, it is CAN-7781.');
+    expect(field).toHaveValue('');
+    expect(screen.getByText('Your comment was added.')).toHaveRole('status');
+
+    const [request] = requestsTo(fetchMock, 'POST', commentPath);
+    expect(await request!.json()).toEqual({ body: 'Yes, it is CAN-7781.' });
+  });
+
+  it('requires some text and at most 1000 characters', async () => {
+    const { user, fetchMock } = renderDispute(disputeDetail());
+
+    const field = await screen.findByRole('textbox', { name: 'Add a comment' });
+    await user.type(field, '   ');
+    await user.click(screen.getByRole('button', { name: 'Add comment' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Enter a comment');
+    expect(field).toHaveAttribute('aria-invalid', 'true');
+    expect(field).toHaveAccessibleDescription(/Enter a comment/);
+
+    await user.clear(field);
+    await user.click(field);
+    await user.paste('x'.repeat(1001));
+    await user.click(screen.getByRole('button', { name: 'Add comment' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Comment must be 1000 characters or fewer',
+    );
+    expect(screen.getByText('1 characters over the limit of 1000')).toBeInTheDocument();
+    expect(requestsTo(fetchMock, 'POST', commentPath)).toHaveLength(0);
+  });
+
+  it('shows the thread of a closed dispute without the form', async () => {
+    renderDispute({ ...refunded, comments: thread });
+
+    expect(await screen.findByRole('list', { name: 'Comments' })).toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add comment' })).not.toBeInTheDocument();
+  });
+
+  it('has no comments section for a closed dispute that has none', async () => {
+    renderDispute(refunded);
+
+    await screen.findByRole('region', { name: 'Dispute details' });
+    expect(screen.queryByRole('region', { name: 'Comments' })).not.toBeInTheDocument();
+  });
+
+  it('explains when the dispute was closed before the comment was sent, and shows its latest status', async () => {
+    let closed = false;
+    const { user } = renderApp({
+      routes: disputeRoutes,
+      at: `/disputes/${DISPUTE_ID}`,
+      api: {
+        [DETAIL]: () =>
+          jsonResponse(
+            closed ? { ...refunded, comments: thread } : disputeDetail({ comments: thread }),
+          ),
+        [COMMENT]: () => {
+          closed = true;
+          return problemResponse(
+            409,
+            'dispute_closed',
+            'Comments can only be added while a dispute is open.',
+          );
+        },
+      },
+    });
+
+    await user.type(await screen.findByRole('textbox', { name: 'Add a comment' }), 'Any news?');
+    await user.click(screen.getByRole('button', { name: 'Add comment' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Your comment was not added');
+    expect(alert).toHaveTextContent(
+      'This dispute was closed before your comment was sent. This page now shows its latest status.',
+    );
+
+    // The page was re-read: the dispute is closed, so the form is gone and the thread stays.
+    await waitFor(() => {
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    });
+    expect(screen.getByText('Refunded', { selector: 'span' })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('list', { name: 'Comments' })).getAllByRole('listitem'),
+    ).toHaveLength(2);
+    expect(screen.getByRole('alert')).toHaveTextContent('Your comment was not added');
+  });
+
+  it('keeps what was typed when the comment is refused for being sent too often', async () => {
+    const { user } = renderDispute(disputeDetail(), () =>
+      problemResponse(429, 'rate_limited', 'Too many comments. Wait a moment and try again.'),
+    );
+
+    const field = await screen.findByRole('textbox', { name: 'Add a comment' });
+    await user.type(field, 'Any news?');
+    await user.click(screen.getByRole('button', { name: 'Add comment' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Your comment was not added');
+    expect(alert).toHaveTextContent('Too many comments. Wait a moment and try again.');
+    expect(field).toHaveValue('Any news?');
+    expect(screen.getByRole('button', { name: 'Add comment' })).toBeEnabled();
+  });
+});

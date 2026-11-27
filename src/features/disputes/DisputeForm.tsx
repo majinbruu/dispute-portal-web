@@ -11,8 +11,8 @@ import { ErrorState } from '../../components/ErrorState';
 import { formatDate, formatMoney } from '../../lib/format';
 import { disputeReasonLabel, mandateTypeLabel, transactionTypeNoun } from '../../lib/labels';
 import { type Problem, toProblem } from '../../lib/problem';
+import { COMMENT_MAX_LENGTH } from './commentSchema';
 import {
-  COMMENT_MAX_LENGTH,
   DISPUTE_FORM_DEFAULTS,
   disputeFormSchema,
   type DisputeFormValues,

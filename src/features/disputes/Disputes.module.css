@@ -141,6 +141,35 @@
   white-space: pre-wrap;
 }
 
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.threadItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+}
+
+.threadMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.threadAuthor {
+  color: var(--color-text);
+  font-weight: var(--font-weight-bold);
+}
+
 .section {
   display: flex;
   flex-direction: column;
