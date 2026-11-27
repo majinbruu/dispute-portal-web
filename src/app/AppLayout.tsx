@@ -4,11 +4,17 @@ import { useUnreadCount } from '../api/queries';
 import { useSession } from '../auth/useSession';
 import styles from './AppLayout.module.css';
 
-const NAV_ITEMS = [
-  { to: '/transactions', label: 'Transactions' },
-  { to: '/disputes', label: 'Disputes' },
-  { to: '/mandates', label: 'Mandates' },
-];
+interface NavItem {
+  to: string;
+  label: string;
+}
+
+interface AppLayoutProps {
+  /** The main navigation of this side of the portal. */
+  navItems: NavItem[];
+  /** Whether this side of the portal has an inbox; only the customer's does. */
+  inbox?: boolean;
+}
 
 const MAX_BADGE_COUNT = 99;
 
@@ -55,7 +61,7 @@ function useFocusOnNavigation() {
 }
 
 /** The signed-in shell: header with navigation, inbox badge and account controls. */
-export function AppLayout() {
+export function AppLayout({ navItems, inbox = false }: AppLayoutProps) {
   const { displayName, signOut } = useSession();
   const mainRef = useFocusOnNavigation();
 
@@ -70,12 +76,12 @@ export function AppLayout() {
             ACME Bank
           </Link>
           <nav className={styles.nav} aria-label="Main">
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <NavLink key={item.to} to={item.to} className={navLinkClass}>
                 {item.label}
               </NavLink>
             ))}
-            <InboxLink />
+            {inbox ? <InboxLink /> : null}
           </nav>
           <div className={styles.account}>
             <span className={styles.userName} title={displayName}>

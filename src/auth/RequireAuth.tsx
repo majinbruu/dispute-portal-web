@@ -8,7 +8,7 @@ import styles from './SignInScreen.module.css';
 const SIGN_IN_FAILED = 'We could not sign you in. Please try again.';
 
 /**
- * Gate for everything that needs a signed-in customer. It never redirects on its own: an
+ * Gate for everything that needs a signed-in user. It never redirects on its own: an
  * unauthenticated visitor sees the sign-in screen and starts the redirect with a button, which
  * rules out redirect loops when the identity provider is misconfigured or unavailable.
  */
