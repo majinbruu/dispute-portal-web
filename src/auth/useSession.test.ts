@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import type { AuthContextProps } from 'react-oidc-context';
-import { oidcUser } from '../test/oidcUser';
+import { accessToken, oidcUser } from '../test/oidcUser';
 import { useSession } from './useSession';
 
 const authState = vi.hoisted((): { current: Partial<AuthContextProps> } => ({ current: {} }));
@@ -54,6 +54,39 @@ describe('useSession', () => {
     const { result } = renderHook(() => useSession());
 
     expect(result.current.displayName).toBe('Customer');
+  });
+
+  it.each([
+    [['customer'], 'customer'],
+    [['agent'], 'agent'],
+    [['offline_access', 'customer'], 'customer'],
+    [['customer', 'agent'], 'agent'],
+    [['auditor'], undefined],
+    [[], undefined],
+  ])('reads the roles %j in the access token as the role %s', (roles, role) => {
+    setAuth({ user: oidcUser({ roles }) });
+
+    const { result } = renderHook(() => useSession());
+
+    expect(result.current.role).toBe(role);
+  });
+
+  it('has no role when there is no user', () => {
+    setAuth({ user: null });
+
+    const { result } = renderHook(() => useSession());
+
+    expect(result.current.role).toBeUndefined();
+  });
+
+  it('greets an agent whose profile names nobody as an agent', () => {
+    const user = userWithProfile({});
+    user.access_token = accessToken({ roles: ['agent'] });
+    setAuth({ user });
+
+    const { result } = renderHook(() => useSession());
+
+    expect(result.current.displayName).toBe('Agent');
   });
 
   it('signs out at the identity provider', () => {

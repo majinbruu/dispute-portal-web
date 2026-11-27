@@ -52,9 +52,10 @@ describe('the shared session', () => {
   });
 
   it('hands out the access token of the signed-in customer', async () => {
-    await getUserManager().storeUser(oidcUser());
+    const user = oidcUser();
+    await getUserManager().storeUser(user);
 
-    expect(await getAccessToken()).toBe('access-token');
+    expect(await getAccessToken()).toBe(user.access_token);
   });
 
   it('withholds an expired access token', async () => {
