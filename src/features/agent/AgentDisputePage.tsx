@@ -14,6 +14,7 @@ import { PageHeader } from '../../components/PageHeader';
 import { Spinner } from '../../components/Spinner';
 import { SuccessMessage } from '../../components/SuccessMessage';
 import { Timeline, type TimelineItem } from '../../components/Timeline';
+import { useConfirmStep } from '../../components/useConfirmStep';
 import { formatDate, formatDateTime, formatMoney } from '../../lib/format';
 import {
   disputeReasonLabel,
@@ -22,11 +23,11 @@ import {
   transactionTypeLabel,
 } from '../../lib/labels';
 import { toProblem } from '../../lib/problem';
-import { describeActionError } from '../disputes/actionErrors';
+import { describeActionError, isOwnDispute } from '../disputes/actionErrors';
 import { Comments, type CommentView } from '../disputes/Comments';
 import { DISPUTE_STATUS_TONE, disputeEventKey } from '../disputes/presentation';
 import styles from './Agent.module.css';
-import { ReviewActions } from './ReviewActions';
+import { ReviewActions, type ReviewStep } from './ReviewActions';
 
 const TITLE = 'Dispute';
 const BACK = { to: '/agent', label: 'Dispute queue' };
@@ -66,6 +67,12 @@ function Details({ dispute }: { dispute: AgentDisputeDetail }) {
   const approve = useApproveDispute(dispute.id);
   const reject = useRejectDispute(dispute.id);
   const addComment = useAddAgentComment(dispute.id);
+  const confirm = useConfirmStep<ReviewStep>();
+  // A 409 removes the confirmation step by itself, because the dispute is no longer Submitted.
+  // An agent's own dispute stays Submitted, so the step is closed here: sending again cannot work.
+  const closeStepOnOwnDispute = (error: unknown) => {
+    if (isOwnDispute(error)) confirm.cancel();
+  };
 
   return (
     <div className={styles.stack}>
@@ -85,13 +92,14 @@ function Details({ dispute }: { dispute: AgentDisputeDetail }) {
         {/* Only a dispute that still waits for review can be decided. */}
         {dispute.status === 'Submitted' ? (
           <ReviewActions
+            confirm={confirm}
             onApprove={() => {
               reject.reset();
-              approve.mutate();
+              approve.mutate(undefined, { onError: closeStepOnOwnDispute });
             }}
             onReject={(reason) => {
               approve.reset();
-              reject.mutate(reason);
+              reject.mutate(reason, { onError: closeStepOnOwnDispute });
             }}
             pending={approve.isPending || reject.isPending}
           />
@@ -104,7 +112,7 @@ function Details({ dispute }: { dispute: AgentDisputeDetail }) {
             Dispute rejected. The customer will see your reason as the outcome.
           </SuccessMessage>
         ) : null}
-        {/* Shown here, not in the confirmation step: after a 409 that step is no longer on the page. */}
+        {/* Shown here, not in the confirmation step: after a 409 or 403 that step is no longer on the page. */}
         {approve.isError ? (
           <ErrorState
             problem={describeActionError(approve.error)}

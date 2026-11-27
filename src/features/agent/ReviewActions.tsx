@@ -3,7 +3,7 @@ import { useId } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Button } from '../../components/Button';
 import { ConfirmPanel } from '../../components/ConfirmPanel';
-import { useConfirmStep } from '../../components/useConfirmStep';
+import type { ConfirmStep } from '../../components/useConfirmStep';
 import styles from './Agent.module.css';
 import {
   REJECT_FORM_DEFAULTS,
@@ -83,7 +83,11 @@ function RejectForm({ onReject, onCancel, pending }: RejectFormProps) {
   );
 }
 
+export type ReviewStep = 'approve' | 'reject';
+
 interface ReviewActionsProps {
+  /** Which confirmation step is open. The page owns it, so it can close the step itself. */
+  confirm: ConfirmStep<ReviewStep>;
   onApprove: () => void;
   onReject: (reason: string) => void;
   /** True while either decision is being sent. */
@@ -94,9 +98,7 @@ interface ReviewActionsProps {
  * The agent's decision on a dispute that waits for review. Neither button acts on its own: each
  * opens a confirmation step in its place, because a decision cannot be taken back.
  */
-export function ReviewActions({ onApprove, onReject, pending }: ReviewActionsProps) {
-  const confirm = useConfirmStep<'approve' | 'reject'>();
-
+export function ReviewActions({ confirm, onApprove, onReject, pending }: ReviewActionsProps) {
   if (confirm.step === 'approve') {
     return (
       <ConfirmPanel title="Approve this dispute?">

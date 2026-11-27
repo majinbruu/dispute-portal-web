@@ -20,6 +20,11 @@ const COMMENT = `POST ${BASE}/comments`;
 
 const submittedEvent = agentDisputeDetail().events[0]!;
 
+const OWN_DISPUTE_MESSAGE =
+  'You raised this dispute yourself as a customer, so you cannot review it. Another agent must review it.';
+const ownDispute = () =>
+  problemResponse(403, 'own_dispute', 'An agent cannot act on a dispute they raised themselves.');
+
 const customerComment = {
   id: 'c-1',
   authorType: 'Customer' as const,
@@ -424,6 +429,33 @@ describe('agent review', () => {
     },
   );
 
+  it.each([
+    ['approving', 'Approve', 'Yes, approve dispute', APPROVE, 'This dispute was not approved'],
+    ['rejecting', 'Reject', 'Reject dispute', REJECT, 'This dispute was not rejected'],
+  ])(
+    'explains when %s is refused because the agent raised the dispute, and closes the confirmation',
+    async (_action, open, confirm, route, title) => {
+      const { user, fetchMock } = renderDispute(agentDisputeDetail(), { [route]: ownDispute });
+
+      await user.click(await screen.findByRole('button', { name: open }));
+      const reason = screen.queryByRole('textbox', { name: 'Reason for rejecting' });
+      if (reason) await user.type(reason, 'Within mandate terms.');
+      await user.click(screen.getByRole('button', { name: confirm }));
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent(title);
+      expect(alert).toHaveTextContent(OWN_DISPUTE_MESSAGE);
+      expect(alert).toHaveTextContent('trace-own_dispute');
+
+      // The confirmation step is closed and focus is back on the button that opened it. The
+      // dispute still waits for review, by another agent, so the page was not re-read.
+      expect(screen.queryByRole('group')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: open })).toHaveFocus();
+      expect(screen.getByText('Submitted', { selector: 'span' })).toBeInTheDocument();
+      expect(requestsTo(fetchMock, 'GET', BASE)).toHaveLength(1);
+    },
+  );
+
   it('keeps the rejection open with its reason after any other failure, so it can be sent again', async () => {
     let attempts = 0;
     const { user } = renderDispute(agentDisputeDetail(), {
@@ -517,6 +549,19 @@ describe('agent comments', () => {
 
     expect(await screen.findByRole('list', { name: 'Comments' })).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  });
+
+  it('explains when a comment is refused because the agent raised the dispute, and keeps the text', async () => {
+    const { user } = renderDispute(agentDisputeDetail(), { [COMMENT]: ownDispute });
+
+    const field = await screen.findByRole('textbox', { name: 'Add a comment' });
+    await user.type(field, 'Any news?');
+    await user.click(screen.getByRole('button', { name: 'Add comment' }));
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Your comment was not added');
+    expect(alert).toHaveTextContent(OWN_DISPUTE_MESSAGE);
+    expect(field).toHaveValue('Any news?');
   });
 
   it('explains when the dispute was closed before the comment was sent', async () => {
