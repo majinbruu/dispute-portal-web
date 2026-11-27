@@ -9,9 +9,9 @@ import { PageHeader } from '../../components/PageHeader';
 import { Pager } from '../../components/Pager';
 import { Spinner } from '../../components/Spinner';
 import { formatDateTime, formatMoney } from '../../lib/format';
-import { disputeReasonLabel, disputeStatusLabel } from '../../lib/labels';
+import { disputeReasonLabel, disputeStatusLabel, transactionTypeLabel } from '../../lib/labels';
 import { toProblem } from '../../lib/problem';
-import { HistoryTabs } from '../debit-orders/HistoryTabs';
+import { HistoryTabs } from '../transactions/HistoryTabs';
 import styles from './Disputes.module.css';
 import { DISPUTE_STATUS_TONE } from './presentation';
 
@@ -52,14 +52,17 @@ function DisputeSection({ state, title, emptyMessage }: SectionProps) {
             <ItemRow
               key={dispute.id}
               to={`/disputes/${dispute.id}`}
-              title={dispute.creditorName}
-              subtitle={`${dispute.reference} · ${disputeReasonLabel(dispute.reasonDescription, dispute.reasonCode)}`}
+              title={dispute.counterpartyName}
+              subtitle={`${dispute.reference} · ${disputeReasonLabel(dispute.reasonLabel, dispute.reasonCode)}`}
               value={formatMoney(dispute.amount, dispute.currency)}
               meta={formatDateTime(dispute.completedAt ?? dispute.submittedAt)}
               badges={
-                <Badge tone={DISPUTE_STATUS_TONE[dispute.status]}>
-                  {disputeStatusLabel(dispute.status)}
-                </Badge>
+                <>
+                  <Badge>{transactionTypeLabel(dispute.transactionType)}</Badge>
+                  <Badge tone={DISPUTE_STATUS_TONE[dispute.status]}>
+                    {disputeStatusLabel(dispute.status)}
+                  </Badge>
+                </>
               }
             />
           ))}

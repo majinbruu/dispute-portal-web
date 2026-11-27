@@ -5,7 +5,7 @@ import { useSession } from '../auth/useSession';
 import styles from './AppLayout.module.css';
 
 const NAV_ITEMS = [
-  { to: '/debit-orders', label: 'Debit orders' },
+  { to: '/transactions', label: 'Transactions' },
   { to: '/disputes', label: 'Disputes' },
   { to: '/mandates', label: 'Mandates' },
 ];

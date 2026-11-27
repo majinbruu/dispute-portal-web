@@ -1,6 +1,6 @@
 import { useParams } from 'react-router';
-import { useDebitOrder, useDisputeReasons } from '../../api/queries';
-import type { DebitOrder } from '../../api/types';
+import { useDisputeReasons, useTransaction } from '../../api/queries';
+import type { Transaction } from '../../api/types';
 import { ButtonLink } from '../../components/Button';
 import { Card } from '../../components/Card';
 import { EmptyState } from '../../components/EmptyState';
@@ -8,30 +8,34 @@ import { ErrorState } from '../../components/ErrorState';
 import { PageHeader } from '../../components/PageHeader';
 import { Spinner } from '../../components/Spinner';
 import { formatDate, formatMoney } from '../../lib/format';
+import { transactionTypeNoun } from '../../lib/labels';
 import { toProblem } from '../../lib/problem';
+import { transactionSummary } from '../transactions/presentation';
 import { DisputeForm } from './DisputeForm';
 import styles from './Disputes.module.css';
 
-const TITLE = 'Dispute a debit order';
+const TITLE = 'Dispute a transaction';
 
-function OrderSummary({ order }: { order: DebitOrder }) {
+function TransactionSummary({ transaction }: { transaction: Transaction }) {
+  const summary = transactionSummary(transaction);
+  const date = formatDate(transaction.effectiveDate);
   return (
     <Card>
       <div className={styles.summary}>
         <div>
-          <p className={styles.summaryName}>{order.creditorName}</p>
-          <p className={styles.note}>
-            {order.statementText} · {formatDate(order.actionDate)}
-          </p>
+          <p className={styles.summaryName}>{transaction.counterpartyName}</p>
+          <p className={styles.note}>{summary ? `${summary} · ${date}` : date}</p>
         </div>
-        <p className={styles.summaryAmount}>{formatMoney(order.amount, order.currency)}</p>
+        <p className={styles.summaryAmount}>
+          {formatMoney(transaction.amount, transaction.currency)}
+        </p>
       </div>
     </Card>
   );
 }
 
-function Reasons({ order }: { order: DebitOrder }) {
-  const query = useDisputeReasons(order.mandateType);
+function Reasons({ transaction }: { transaction: Transaction }) {
+  const query = useDisputeReasons(transaction.id);
 
   if (query.isPending) {
     return <Spinner label="Loading dispute reasons…" />;
@@ -48,24 +52,24 @@ function Reasons({ order }: { order: DebitOrder }) {
   if (query.data.length === 0) {
     return (
       <EmptyState
-        title="This debit order cannot be disputed online"
-        description="No dispute reasons are available for this type of mandate."
+        title={`This ${transactionTypeNoun(transaction.type)} cannot be disputed online`}
+        description="No dispute reasons are available for this transaction."
       />
     );
   }
-  return <DisputeForm order={order} reasons={query.data} />;
+  return <DisputeForm transaction={transaction} reasons={query.data} />;
 }
 
 export function DisputeFormPage() {
   const { id = '' } = useParams();
-  const back = { to: `/debit-orders/${id}`, label: 'Debit order' };
-  const query = useDebitOrder(id);
+  const back = { to: `/transactions/${id}`, label: 'Transaction' };
+  const query = useTransaction(id);
 
   if (query.isPending) {
     return (
       <>
         <PageHeader title={TITLE} back={back} />
-        <Spinner label="Loading debit order…" />
+        <Spinner label="Loading transaction…" />
       </>
     );
   }
@@ -75,30 +79,34 @@ export function DisputeFormPage() {
         <PageHeader title={TITLE} back={back} />
         <ErrorState
           problem={toProblem(query.error)}
-          title="We could not load this debit order"
+          title="We could not load this transaction"
           onRetry={() => void query.refetch()}
         />
       </>
     );
   }
 
-  const order = query.data;
-  // The API decides eligibility; the form is only offered when it says the order can be disputed.
-  if (!order.eligibility.canDispute) {
+  const transaction = query.data;
+  const noun = transactionTypeNoun(transaction.type);
+  // The API decides eligibility; the form is only offered when it says the transaction can be
+  // disputed. No screen links here otherwise, so this is only reached from a stale or typed URL.
+  if (!transaction.eligibility.canDispute) {
     return (
       <>
         <PageHeader title={TITLE} back={back} />
         <div className={styles.stack}>
-          <OrderSummary order={order} />
+          <TransactionSummary transaction={transaction} />
           <EmptyState
-            title="This debit order cannot be disputed"
-            description={order.eligibility.message}
+            title={`This ${noun} cannot be disputed`}
+            description={transaction.eligibility.message}
             action={
-              order.dispute ? (
-                <ButtonLink to={`/disputes/${order.dispute.id}`}>View dispute progress</ButtonLink>
+              transaction.dispute ? (
+                <ButtonLink to={`/disputes/${transaction.dispute.id}`}>
+                  View dispute progress
+                </ButtonLink>
               ) : (
                 <ButtonLink to={back.to} variant="secondary">
-                  Back to debit order
+                  Back to {noun}
                 </ButtonLink>
               )
             }
@@ -112,8 +120,8 @@ export function DisputeFormPage() {
     <>
       <PageHeader title={TITLE} back={back} />
       <div className={styles.stack}>
-        <OrderSummary order={order} />
-        <Reasons order={order} />
+        <TransactionSummary transaction={transaction} />
+        <Reasons transaction={transaction} />
       </div>
     </>
   );

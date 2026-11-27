@@ -9,7 +9,7 @@ export function NotFoundPage() {
       <EmptyState
         title="We could not find that page"
         description="The link may be out of date, or the page may have moved."
-        action={<ButtonLink to="/debit-orders">Go to my debit orders</ButtonLink>}
+        action={<ButtonLink to="/transactions">Go to my transactions</ButtonLink>}
       />
     </>
   );

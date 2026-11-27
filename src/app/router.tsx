@@ -1,8 +1,8 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
-import { debitOrderRoutes } from '../features/debit-orders/routes';
 import { disputeRoutes } from '../features/disputes/routes';
 import { inboxRoutes } from '../features/inbox/routes';
 import { mandateRoutes } from '../features/mandates/routes';
+import { transactionRoutes } from '../features/transactions/routes';
 import { AppLayout } from './AppLayout';
 import { NotFoundPage } from './NotFoundPage';
 import { RouteError } from './RouteError';
@@ -16,8 +16,8 @@ export const routes: RouteObject[] = [
         // Pathless route so a screen that throws is replaced inside the layout, not instead of it.
         errorElement: <RouteError />,
         children: [
-          { index: true, element: <Navigate to="/debit-orders" replace /> },
-          ...debitOrderRoutes,
+          { index: true, element: <Navigate to="/transactions" replace /> },
+          ...transactionRoutes,
           ...disputeRoutes,
           ...mandateRoutes,
           ...inboxRoutes,

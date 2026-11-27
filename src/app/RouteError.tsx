@@ -11,7 +11,7 @@ export function RouteError() {
     <ErrorState
       problem={toProblem(error)}
       title="This page could not be displayed"
-      action={<ButtonLink to="/">Go to my debit orders</ButtonLink>}
+      action={<ButtonLink to="/">Go to my transactions</ButtonLink>}
     />
   );
 }

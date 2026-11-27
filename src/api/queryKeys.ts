@@ -1,13 +1,32 @@
-import type { DebitOrderSort, DebitOrderStatus, DisputeState, MandateType } from './types';
+import type {
+  CardStatus,
+  DebitOrderStatus,
+  DebitOrderType,
+  DisputeState,
+  MandateType,
+  TransactionSort,
+} from './types';
 
-export interface DebitOrderFilters {
-  status?: DebitOrderStatus;
-  /** Required: the two kinds of debit order are never listed together. */
-  mandateType: MandateType;
-  sort: DebitOrderSort;
+interface TransactionPaging {
+  sort: TransactionSort;
   page: number;
   pageSize: number;
 }
+
+export interface DebitOrderFilters extends TransactionPaging {
+  type: 'DebitOrder';
+  /** Required: the kinds of debit order are never listed together. */
+  mandateType: DebitOrderType;
+  status?: DebitOrderStatus;
+}
+
+export interface CardFilters extends TransactionPaging {
+  type: 'Card';
+  status?: CardStatus;
+}
+
+/** Each transaction type has its own list, with the filters that apply to that type. */
+export type TransactionFilters = DebitOrderFilters | CardFilters;
 
 export interface MandateFilters {
   type: MandateType;
@@ -28,17 +47,17 @@ export interface NotificationFilters {
 
 /** Hierarchical query keys, so a whole resource can be invalidated by its prefix. */
 export const queryKeys = {
-  debitOrders: {
-    all: ['debit-orders'] as const,
-    list: (filters: DebitOrderFilters) => ['debit-orders', 'list', filters] as const,
-    detail: (id: string) => ['debit-orders', 'detail', id] as const,
+  transactions: {
+    all: ['transactions'] as const,
+    list: (filters: TransactionFilters) => ['transactions', 'list', filters] as const,
+    detail: (id: string) => ['transactions', 'detail', id] as const,
   },
   mandates: {
     all: ['mandates'] as const,
     list: (filters: MandateFilters) => ['mandates', 'list', filters] as const,
     detail: (id: string) => ['mandates', 'detail', id] as const,
   },
-  disputeReasons: (mandateType: MandateType) => ['dispute-reasons', mandateType] as const,
+  disputeReasons: (transactionId: string) => ['dispute-reasons', transactionId] as const,
   disputes: {
     all: ['disputes'] as const,
     lists: ['disputes', 'list'] as const,

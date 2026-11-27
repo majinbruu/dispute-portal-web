@@ -4,36 +4,41 @@ import { useApiClient } from './apiContext';
 import { unwrap } from './client';
 import { normalizePaged } from './paging';
 import {
-  type DebitOrderFilters,
   type DisputeFilters,
   type MandateFilters,
   type NotificationFilters,
   queryKeys,
+  type TransactionFilters,
 } from './queryKeys';
-import type { MandateType, SubmitDisputeRequest } from './types';
+import type { SubmitDisputeRequest } from './types';
 
 /** How often a pending dispute is re-read while the scheme is still deciding its outcome. */
 export const PENDING_DISPUTE_POLL_MS = 3_000;
 const UNREAD_COUNT_POLL_MS = 30_000;
 const REFERENCE_DATA_STALE_MS = 5 * 60_000;
 
-export function useDebitOrders(filters: DebitOrderFilters) {
+/** The type's own filters, under the parameter names the API uses for that type. */
+function transactionQuery(filters: TransactionFilters) {
+  const paging = { sort: filters.sort, page: filters.page, pageSize: filters.pageSize };
+  return filters.type === 'DebitOrder'
+    ? {
+        type: filters.type,
+        mandateType: filters.mandateType,
+        debitOrderStatus: filters.status,
+        ...paging,
+      }
+    : { type: filters.type, cardStatus: filters.status, ...paging };
+}
+
+export function useTransactions(filters: TransactionFilters) {
   const api = useApiClient();
   return useQuery({
-    queryKey: queryKeys.debitOrders.list(filters),
+    queryKey: queryKeys.transactions.list(filters),
     queryFn: async ({ signal }) =>
       normalizePaged(
         await unwrap(
-          api.GET('/api/v1/debit-orders', {
-            params: {
-              query: {
-                status: filters.status,
-                mandateType: filters.mandateType,
-                sort: filters.sort,
-                page: filters.page,
-                pageSize: filters.pageSize,
-              },
-            },
+          api.GET('/api/v1/transactions', {
+            params: { query: transactionQuery(filters) },
             signal,
           }),
         ),
@@ -42,12 +47,13 @@ export function useDebitOrders(filters: DebitOrderFilters) {
   });
 }
 
-export function useDebitOrder(id: string) {
+/** One transaction of either type: a debit order or a card transaction. */
+export function useTransaction(id: string) {
   const api = useApiClient();
   return useQuery({
-    queryKey: queryKeys.debitOrders.detail(id),
+    queryKey: queryKeys.transactions.detail(id),
     queryFn: ({ signal }) =>
-      unwrap(api.GET('/api/v1/debit-orders/{id}', { params: { path: { id } }, signal })),
+      unwrap(api.GET('/api/v1/transactions/{id}', { params: { path: { id } }, signal })),
   });
 }
 
@@ -79,13 +85,13 @@ export function useMandate(id: string) {
   });
 }
 
-/** Reasons the customer may choose for a debit order collected under this type of mandate. */
-export function useDisputeReasons(mandateType: MandateType) {
+/** Reasons the customer may choose for this transaction; the API decides which ones apply. */
+export function useDisputeReasons(transactionId: string) {
   const api = useApiClient();
   return useQuery({
-    queryKey: queryKeys.disputeReasons(mandateType),
+    queryKey: queryKeys.disputeReasons(transactionId),
     queryFn: ({ signal }) =>
-      unwrap(api.GET('/api/v1/dispute-reasons', { params: { query: { mandateType } }, signal })),
+      unwrap(api.GET('/api/v1/dispute-reasons', { params: { query: { transactionId } }, signal })),
     staleTime: REFERENCE_DATA_STALE_MS,
   });
 }
@@ -110,7 +116,7 @@ export function useSubmitDispute() {
     onSuccess: (dispute) => {
       queryClient.setQueryData(queryKeys.disputes.detail(dispute.id), dispute);
       void queryClient.invalidateQueries({ queryKey: queryKeys.disputes.lists });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.debitOrders.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.transactions.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all });
     },
   });

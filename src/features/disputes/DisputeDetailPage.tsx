@@ -9,7 +9,12 @@ import { PageHeader } from '../../components/PageHeader';
 import { Spinner } from '../../components/Spinner';
 import { Timeline, type TimelineItem } from '../../components/Timeline';
 import { formatDate, formatDateTime, formatMoney } from '../../lib/format';
-import { disputeReasonLabel, disputeStatusLabel, mandateTypeLabel } from '../../lib/labels';
+import {
+  disputeReasonLabel,
+  disputeStatusLabel,
+  mandateTypeLabel,
+  transactionTypeLabel,
+} from '../../lib/labels';
 import { toProblem } from '../../lib/problem';
 import styles from './Disputes.module.css';
 import { DISPUTE_STATUS_TONE } from './presentation';
@@ -31,12 +36,13 @@ function toTimelineItems(dispute: DisputeDetail): TimelineItem[] {
 
 function Details({ dispute }: { dispute: DisputeDetail }) {
   const isPending = dispute.state === 'Pending';
+  const isCard = dispute.transactionType === 'Card';
   return (
     <div className={styles.stack}>
       <Card>
         <div className={styles.summary}>
           <div>
-            <p className={styles.summaryName}>{dispute.creditorName}</p>
+            <p className={styles.summaryName}>{dispute.counterpartyName}</p>
             <p className={styles.note}>Reference {dispute.reference}</p>
           </div>
           <p className={styles.summaryAmount}>{formatMoney(dispute.amount, dispute.currency)}</p>
@@ -64,19 +70,29 @@ function Details({ dispute }: { dispute: DisputeDetail }) {
             { label: 'Reference', value: dispute.reference },
             {
               label: 'Reason',
-              value: disputeReasonLabel(dispute.reasonDescription, dispute.reasonCode),
+              value: disputeReasonLabel(dispute.reasonLabel, dispute.reasonCode),
             },
             { label: 'Amount', value: formatMoney(dispute.amount, dispute.currency) },
             {
-              label: 'Debit order',
+              label: transactionTypeLabel(dispute.transactionType),
               value: (
-                <Link to={`/debit-orders/${dispute.debitOrderId}`}>
-                  {dispute.creditorName}, {formatDate(dispute.actionDate)}
+                <Link to={`/transactions/${dispute.transactionId}`}>
+                  {dispute.counterpartyName}, {formatDate(dispute.transactionDate)}
                 </Link>
               ),
             },
-            { label: 'Transaction ID', value: dispute.originalTransactionId },
-            { label: 'Mandate type', value: mandateTypeLabel(dispute.mandateType) },
+            // How the payment scheme identifies the transaction, named as that scheme names it.
+            {
+              label: isCard ? 'Acquirer reference number' : 'Transaction ID',
+              value: dispute.schemeReference,
+            },
+            // A card dispute has a card scheme and no mandate; an EFT debit order has a mandate
+            // type and no mandate reference. Rows without a value are left out.
+            { label: 'Card scheme', value: dispute.cardScheme },
+            {
+              label: 'Mandate type',
+              value: dispute.mandateType ? mandateTypeLabel(dispute.mandateType) : null,
+            },
             { label: 'Mandate reference', value: dispute.mandateReference },
             { label: 'Submitted', value: formatDateTime(dispute.submittedAt) },
             {

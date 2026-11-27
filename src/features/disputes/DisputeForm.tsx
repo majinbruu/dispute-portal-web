@@ -3,13 +3,13 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { useSubmitDispute } from '../../api/queries';
-import type { DebitOrder, DisputeReason, SubmitDisputeRequest } from '../../api/types';
+import type { DisputeReason, SubmitDisputeRequest, Transaction } from '../../api/types';
 import { Button, ButtonLink } from '../../components/Button';
 import { Card } from '../../components/Card';
-import { DescriptionList } from '../../components/DescriptionList';
+import { type DescriptionItem, DescriptionList } from '../../components/DescriptionList';
 import { ErrorState } from '../../components/ErrorState';
 import { formatDate, formatMoney } from '../../lib/format';
-import { disputeReasonLabel, mandateTypeLabel } from '../../lib/labels';
+import { disputeReasonLabel, mandateTypeLabel, transactionTypeNoun } from '../../lib/labels';
 import { type Problem, toProblem } from '../../lib/problem';
 import {
   DISPUTE_FORM_DEFAULTS,
@@ -17,36 +17,49 @@ import {
   type DisputeFormValues,
 } from './disputeFormSchema';
 import styles from './Disputes.module.css';
+import { cardName } from '../transactions/presentation';
 import { describeSubmitError } from './submitErrors';
 import { useIdempotencyKey } from './useIdempotencyKey';
 
 type Step = 'details' | 'review';
 
 interface DisputeFormProps {
-  order: DebitOrder;
-  /** Reasons the API allows for this debit order's mandate type. */
+  transaction: Transaction;
+  /** Reasons the API allows for this transaction. */
   reasons: DisputeReason[];
 }
 
-function toRequest(order: DebitOrder, values: DisputeFormValues): SubmitDisputeRequest {
-  return { debitOrderId: order.id, reasonCode: values.reasonCode };
+function toRequest(transaction: Transaction, values: DisputeFormValues): SubmitDisputeRequest {
+  return { transactionId: transaction.id, reasonId: values.reasonId };
+}
+
+/** What the review step shows about the transaction; the facts differ by type. */
+function reviewItems(transaction: Transaction): DescriptionItem[] {
+  const { debitOrder, card } = transaction;
+  return [
+    { label: card ? 'Merchant' : 'Company', value: transaction.counterpartyName },
+    { label: 'Amount', value: formatMoney(transaction.amount, transaction.currency) },
+    { label: 'Date', value: formatDate(transaction.effectiveDate) },
+    { label: 'Mandate type', value: debitOrder ? mandateTypeLabel(debitOrder.mandateType) : null },
+    { label: 'Card', value: card ? cardName(card) : null },
+  ];
 }
 
 interface SubmitErrorProps {
   problem: Problem;
-  order: DebitOrder;
+  transaction: Transaction;
 }
 
-function SubmitError({ problem, order }: SubmitErrorProps) {
+function SubmitError({ problem, transaction }: SubmitErrorProps) {
   const view = describeSubmitError(problem);
   return (
     <ErrorState
       problem={problem}
       title={view.message}
       action={
-        view.action === 'viewDebitOrder' ? (
-          <ButtonLink to={`/debit-orders/${order.id}`} variant="secondary">
-            View this debit order
+        view.action === 'viewTransaction' ? (
+          <ButtonLink to={`/transactions/${transaction.id}`} variant="secondary">
+            View this {transactionTypeNoun(transaction.type)}
           </ButtonLink>
         ) : view.action === 'viewDisputes' ? (
           <ButtonLink to="/disputes" variant="secondary">
@@ -62,7 +75,7 @@ function SubmitError({ problem, order }: SubmitErrorProps) {
  * The two-step dispute form: choose a reason, then review and submit. Nothing is sent until the
  * customer confirms on the review step.
  */
-export function DisputeForm({ order, reasons }: DisputeFormProps) {
+export function DisputeForm({ transaction, reasons }: DisputeFormProps) {
   const id = useId();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>('details');
@@ -91,7 +104,7 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
   }, [step]);
 
   const onSubmit = () => {
-    const request = toRequest(order, getValues());
+    const request = toRequest(transaction, getValues());
     submit.mutate(
       { request, idempotencyKey: idempotencyKeyFor(request) },
       {
@@ -104,7 +117,7 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
 
   if (step === 'review') {
     const values = getValues();
-    const reason = reasons.find((candidate) => candidate.code === values.reasonCode);
+    const reason = reasons.find((candidate) => candidate.id === values.reasonId);
     return (
       <div className={styles.form}>
         <div>
@@ -116,15 +129,10 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
         <Card>
           <DescriptionList
             items={[
-              { label: 'Company', value: order.creditorName },
-              { label: 'Amount', value: formatMoney(order.amount, order.currency) },
-              { label: 'Date', value: formatDate(order.actionDate) },
-              { label: 'Mandate type', value: mandateTypeLabel(order.mandateType) },
+              ...reviewItems(transaction),
               {
                 label: 'Reason',
-                value: reason
-                  ? disputeReasonLabel(reason.description, reason.code)
-                  : values.reasonCode,
+                value: reason ? disputeReasonLabel(reason.label, reason.code) : values.reasonId,
               },
             ]}
           />
@@ -133,7 +141,9 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
           By submitting you confirm that the information above is correct. We will let you know the
           outcome in your inbox.
         </p>
-        {submit.isError ? <SubmitError problem={toProblem(submit.error)} order={order} /> : null}
+        {submit.isError ? (
+          <SubmitError problem={toProblem(submit.error)} transaction={transaction} />
+        ) : null}
         <div className={styles.actions}>
           <Button onClick={onSubmit} disabled={submit.isPending}>
             {submit.isPending ? 'Submitting…' : 'Submit dispute'}
@@ -171,28 +181,30 @@ export function DisputeForm({ order, reasons }: DisputeFormProps) {
       </div>
 
       <fieldset
-        aria-describedby={errors.reasonCode ? reasonErrorId : undefined}
-        aria-invalid={errors.reasonCode ? true : undefined}
+        aria-describedby={errors.reasonId ? reasonErrorId : undefined}
+        aria-invalid={errors.reasonId ? true : undefined}
       >
-        <legend className={styles.legend}>Why are you disputing this debit order?</legend>
+        <legend className={styles.legend}>
+          Why are you disputing this {transactionTypeNoun(transaction.type)}?
+        </legend>
         <div className={styles.reasons}>
           {reasons.map((reason) => (
-            <label key={reason.code} className={styles.reason}>
-              <input type="radio" value={reason.code} {...register('reasonCode')} />
-              <span>{disputeReasonLabel(reason.description, reason.code)}</span>
+            <label key={reason.id} className={styles.reason}>
+              <input type="radio" value={reason.id} {...register('reasonId')} />
+              <span>{disputeReasonLabel(reason.label, reason.code)}</span>
             </label>
           ))}
         </div>
-        {errors.reasonCode ? (
+        {errors.reasonId ? (
           <p id={reasonErrorId} className={styles.fieldError} role="alert">
-            {errors.reasonCode.message}
+            {errors.reasonId.message}
           </p>
         ) : null}
       </fieldset>
 
       <div className={styles.actions}>
         <Button type="submit">Continue</Button>
-        <ButtonLink to={`/debit-orders/${order.id}`} variant="secondary">
+        <ButtonLink to={`/transactions/${transaction.id}`} variant="secondary">
           Cancel
         </ButtonLink>
       </div>

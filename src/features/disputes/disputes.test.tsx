@@ -2,7 +2,14 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import { PENDING_DISPUTE_POLL_MS } from '../../api/queries';
 import { queryKeys } from '../../api/queryKeys';
 import { jsonResponse, paged, problemResponse, requestsTo } from '../../test/apiMock';
-import { DEBIT_ORDER_ID, DISPUTE_ID, disputeDetail, disputeSummary } from '../../test/fixtures';
+import {
+  CARD_TRANSACTION_ID,
+  cardDisputeDetail,
+  DISPUTE_ID,
+  disputeDetail,
+  disputeSummary,
+  TRANSACTION_ID,
+} from '../../test/fixtures';
 import { renderApp } from '../../test/renderApp';
 import { disputeRoutes } from './routes';
 
@@ -52,7 +59,7 @@ describe('dispute history', () => {
             disputeSummary({
               id: 'done-1',
               reference: 'DSP-2026-000099',
-              creditorName: 'SureCover Insurance',
+              counterpartyName: 'SureCover Insurance',
               status: 'Declined',
               state: 'Completed',
               completedAt: '2026-02-01T10:00:00Z',
@@ -69,7 +76,7 @@ describe('dispute history', () => {
     expect(pending.getByRole('link')).toHaveTextContent(
       'I did not authorise this debit order (MD01)',
     );
-    expect(pending.getByRole('link')).toHaveTextContent('Processing');
+    expect(pending.getByRole('link')).toHaveTextContent(/Debit order\s*Processing/);
 
     const completed = within(await screen.findByRole('list', { name: 'Completed disputes' }));
     expect(completed.getByRole('link')).toHaveTextContent('SureCover Insurance');
@@ -81,6 +88,44 @@ describe('dispute history', () => {
     expect(states.sort()).toEqual(['Completed', 'Pending']);
   });
 
+  it('shows card and debit order disputes together, each marked with its type', async () => {
+    renderApp({
+      routes: disputeRoutes,
+      at: '/disputes',
+      api: {
+        [LIST]: listByState(
+          [
+            disputeSummary({
+              id: 'card-1',
+              reference: 'DSP-2026-000456',
+              transactionId: CARD_TRANSACTION_ID,
+              transactionType: 'Card',
+              counterpartyName: 'Takealot',
+              amount: 1899.0,
+              reasonId: 'not_received',
+              reasonCode: '13.1',
+              reasonLabel: 'I did not receive the goods or service',
+            }),
+            disputeSummary(),
+          ],
+          [],
+        ),
+      },
+    });
+
+    const [card, debitOrder] = within(
+      await screen.findByRole('list', { name: 'Pending disputes' }),
+    ).getAllByRole('listitem');
+    expect(within(card!).getByRole('link')).toHaveAttribute('href', '/disputes/card-1');
+    expect(card).toHaveTextContent('Takealot');
+    expect(card).toHaveTextContent(
+      'DSP-2026-000456 · I did not receive the goods or service (13.1)',
+    );
+    expect(card).toHaveTextContent(/R\s1\s899,00/);
+    expect(card).toHaveTextContent(/Card transaction\s*Submitted/);
+    expect(debitOrder).toHaveTextContent(/Debit order\s*Submitted/);
+  });
+
   it('marks Dispute history as the current tab', async () => {
     renderApp({ routes: disputeRoutes, at: '/disputes', api: { [LIST]: paged([]) } });
 
@@ -89,9 +134,9 @@ describe('dispute history', () => {
       'aria-current',
       'page',
     );
-    expect(screen.getByRole('link', { name: 'My debit orders' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'My transactions' })).toHaveAttribute(
       'href',
-      '/debit-orders',
+      '/transactions',
     );
     await screen.findByText('No pending disputes');
   });
@@ -153,11 +198,56 @@ describe('dispute progress', () => {
     expect(details).toHaveTextContent('ReasonI did not authorise this debit order (MD01)');
     expect(details).toHaveTextContent(/AmountR\s499,00/);
     expect(details).toHaveTextContent('OutcomeR 499,00 was paid back into your account.');
+    expect(details).toHaveTextContent('Debit orderFitLife Gym, 01 Mar 2026');
     expect(within(details).getByRole('link', { name: /FitLife Gym/ })).toHaveAttribute(
       'href',
-      `/debit-orders/${DEBIT_ORDER_ID}`,
+      `/transactions/${TRANSACTION_ID}`,
     );
+    expect(details).toHaveTextContent('Transaction IDTXN-20260301-0001');
+    expect(details).toHaveTextContent('Mandate typeDebiCheck');
+    expect(details).toHaveTextContent('Mandate referenceMND-0001');
+    expect(details).not.toHaveTextContent('Card scheme');
     expect(screen.queryByText('Checking for updates…')).not.toBeInTheDocument();
+  });
+
+  it('shows the card scheme of a card dispute, and no mandate', async () => {
+    renderApp({
+      routes: disputeRoutes,
+      at: `/disputes/${DISPUTE_ID}`,
+      api: { [DETAIL]: cardDisputeDetail({ status: 'Refunded', state: 'Completed' }) },
+    });
+
+    const details = await screen.findByRole('region', { name: 'Dispute details' });
+    expect(details).toHaveTextContent('ReasonI did not receive the goods or service (13.1)');
+    expect(details).toHaveTextContent(/AmountR\s1\s899,00/);
+    expect(details).toHaveTextContent('Card transactionTakealot, 03 Mar 2026');
+    expect(within(details).getByRole('link', { name: /Takealot/ })).toHaveAttribute(
+      'href',
+      `/transactions/${CARD_TRANSACTION_ID}`,
+    );
+    expect(details).toHaveTextContent('Acquirer reference number74012345678901234567890');
+    expect(details).toHaveTextContent('Card schemeVisa');
+    expect(details).not.toHaveTextContent(/Mandate|Transaction ID|Debit order/);
+    expect(screen.getByText('Takealot', { selector: 'p' })).toBeInTheDocument();
+  });
+
+  it('shows an EFT debit order dispute with its type and no mandate reference', async () => {
+    renderApp({
+      routes: disputeRoutes,
+      at: `/disputes/${DISPUTE_ID}`,
+      api: {
+        [DETAIL]: disputeDetail({
+          counterpartyName: 'City of Cape Town',
+          mandateType: 'Eft',
+          mandateReference: null,
+        }),
+      },
+    });
+
+    const details = await screen.findByRole('region', { name: 'Dispute details' });
+    expect(details).toHaveTextContent('Mandate typeEFT');
+    expect(details).not.toHaveTextContent('Mandate reference');
+    expect(details).not.toHaveTextContent('Card scheme');
   });
 
   it('shows a not-found problem with its trace ID', async () => {
@@ -210,9 +300,9 @@ describe('dispute progress', () => {
       expect(await screen.findByText('Refunded', { selector: 'span' })).toBeInTheDocument();
       expect(screen.queryByText('Checking for updates…')).not.toBeInTheDocument();
 
-      // The outcome changes the lists, the debit order and the inbox.
+      // The outcome changes the lists, the transaction and the inbox.
       expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.disputes.lists });
-      expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.debitOrders.all });
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.transactions.all });
       expect(invalidate).toHaveBeenCalledWith({ queryKey: queryKeys.notifications.all });
 
       await act(() => vi.advanceTimersByTimeAsync(PENDING_DISPUTE_POLL_MS * 3));

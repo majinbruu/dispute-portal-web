@@ -25,13 +25,13 @@ describe('createApiClient', () => {
   it('sends the bearer token and typed query parameters', async () => {
     const { client, sentRequest } = setup(() => jsonResponse({ unread: 3 }));
 
-    await client.GET('/api/v1/debit-orders', {
-      params: { query: { status: 'Rejected', page: 2, pageSize: 10 } },
+    await client.GET('/api/v1/transactions', {
+      params: { query: { type: 'Card', cardStatus: 'Settled', page: 2, pageSize: 10 } },
     });
 
     const request = sentRequest();
     expect(request.url).toBe(
-      'http://api.test/api/v1/debit-orders?status=Rejected&page=2&pageSize=10',
+      'http://api.test/api/v1/transactions?type=Card&cardStatus=Settled&page=2&pageSize=10',
     );
     expect(request.headers.get('Authorization')).toBe('Bearer tok');
     expect(request.headers.get('Accept')).toContain('application/problem+json');
@@ -87,7 +87,7 @@ describe('unwrap', () => {
         {
           title: 'Already disputed',
           status: 409,
-          detail: 'This debit order has already been disputed.',
+          detail: 'This transaction has already been disputed.',
           code: 'already_disputed',
           traceId: 'trace-123',
         },
@@ -98,7 +98,7 @@ describe('unwrap', () => {
 
     const error = await unwrap(
       client.POST('/api/v1/disputes', {
-        body: { debitOrderId: 'd1', reasonCode: 'R1' },
+        body: { transactionId: 't1', reasonId: 'duplicate' },
         params: { header: { 'Idempotency-Key': 'key-1' } },
       }),
     ).catch((caught: unknown) => caught);
@@ -108,7 +108,7 @@ describe('unwrap', () => {
       status: 409,
       code: 'already_disputed',
       title: 'Already disputed',
-      detail: 'This debit order has already been disputed.',
+      detail: 'This transaction has already been disputed.',
       traceId: 'trace-123',
     });
   });

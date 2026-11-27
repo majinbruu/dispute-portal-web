@@ -4,74 +4,6 @@
  */
 
 export interface paths {
-  '/api/v1/debit-orders': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Lists the customer's debit orders, newest first, with whether each can be disputed. */
-    get: operations['ListDebitOrders'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/debit-orders/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Returns one debit order with its dispute eligibility. */
-    get: operations['GetDebitOrder'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/mandates': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Lists the customer's debit order mandates, optionally by type. */
-    get: operations['ListMandates'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/mandates/{id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Returns one mandate. */
-    get: operations['GetMandate'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/api/v1/disputes': {
     parameters: {
       query?: never;
@@ -82,7 +14,7 @@ export interface paths {
     /** Lists the customer's disputes, newest first. Filter by state to get pending or completed disputes. */
     get: operations['ListDisputes'];
     put?: never;
-    /** Raises a dispute against a debit order. Requires an Idempotency-Key header, which makes retries safe. */
+    /** Raises a dispute against a debit order or a card transaction. Requires an Idempotency-Key header, which makes retries safe. */
     post: operations['SubmitDispute'];
     delete?: never;
     options?: never;
@@ -114,7 +46,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Lists the dispute reasons a customer can choose, optionally only those allowed for a mandate type. */
+    /** Lists the dispute reasons the customer can choose for one of their transactions, each with the scheme's code for it. */
     get: operations['ListDisputeReasons'];
     put?: never;
     post?: never;
@@ -175,56 +107,148 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/mandates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Lists the customer's debit order mandates, optionally by type. */
+    get: operations['ListMandates'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/mandates/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Returns one mandate. */
+    get: operations['GetMandate'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/transactions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Lists the customer's transactions of one type, newest first, with whether each can be disputed. */
+    get: operations['ListTransactions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/transactions/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Returns one transaction with the details of its type and its dispute eligibility. */
+    get: operations['GetTransaction'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    CardDetailDto: {
+      cardNumberMasked: string;
+      scheme: components['schemas']['CardScheme'];
+      kind: components['schemas']['CardTransactionKind'];
+      merchantCity: string;
+      merchantCountry: string;
+      merchantCategoryCode: string;
+      /** Format: date */
+      transactionDate: string;
+      /** Format: date */
+      postingDate: null | string;
+      authorisationCode: string;
+      acquirerReferenceNumber: string;
+      entryMode: components['schemas']['CardEntryMode'];
+      verification: components['schemas']['CardholderVerification'];
+      status: components['schemas']['CardSettlementStatus'];
+      /** Format: double */
+      refundedAmount: number | string;
+    };
+    /** @enum {unknown} */
+    CardEntryMode: 'Chip' | 'Contactless' | 'ECommerce' | 'Recurring';
+    /** @enum {unknown} */
+    CardScheme: 'Visa' | 'Mastercard';
+    /** @enum {unknown} */
+    CardSettlementStatus: 'Settled' | 'Pending' | 'Declined' | 'Reversed';
+    /** @enum {unknown} */
+    CardTransactionKind: 'Purchase' | 'CashWithdrawal';
+    /** @enum {unknown} */
+    CardholderVerification: 'Pin' | 'ThreeDSecure' | 'None';
     /** @enum {unknown} */
     CollectionFrequency: 'Weekly' | 'Fortnightly' | 'Monthly' | 'Quarterly' | 'Annually';
-    DebitOrderDto: {
-      /** Format: uuid */
-      id: string;
+    DebitOrderDetailDto: {
       transactionId: string;
       endToEndId: string;
-      creditorName: string;
       creditorShortName: string;
       statementText: string;
-      /** Format: double */
-      amount: number | string;
-      currency: string;
-      /** Format: date */
-      actionDate: string;
       sequenceType: components['schemas']['SequenceType'];
       status: components['schemas']['DebitOrderStatus'];
       statusReasonCode: null | string;
       statusReason: null | string;
-      debtorAccountMasked: string;
+      mandateType: components['schemas']['DebitOrderType'];
       /** Format: uuid */
-      mandateId: string;
-      mandateType: components['schemas']['MandateType'];
-      mandateReference: string;
-      eligibility: components['schemas']['DisputeEligibilityDto'];
-      dispute: null | components['schemas']['DisputeLinkDto'];
+      mandateId: null | string;
+      mandateReference: null | string;
+      contractReference: string;
     };
     /** @enum {unknown} */
     DebitOrderStatus: 'Accepted' | 'Rejected';
+    /** @enum {unknown} */
+    DebitOrderType: 'DebiCheck' | 'Registered' | 'Eft';
     DisputeDetailDto: {
       /** Format: uuid */
       id: string;
       reference: string;
       /** Format: uuid */
-      debitOrderId: string;
-      originalTransactionId: string;
-      creditorName: string;
-      mandateType: string;
-      mandateReference: string;
+      transactionId: string;
+      transactionType: components['schemas']['DisputedTransactionType'];
+      schemeReference: string;
+      counterpartyName: string;
+      mandateType: null | string;
+      mandateReference: null | string;
+      cardScheme: null | string;
       /** Format: double */
       amount: number | string;
       currency: string;
       /** Format: date */
-      actionDate: string;
+      transactionDate: string;
+      reasonId: string;
       reasonCode: string;
-      reasonDescription: string;
+      reasonLabel: string;
       status: components['schemas']['DisputeStatus'];
       state: components['schemas']['DisputeState'];
       /** Format: date-time */
@@ -239,6 +263,9 @@ export interface components {
       | 'Eligible'
       | 'WithinMandateTerms'
       | 'CollectionRejected'
+      | 'NotAPurchase'
+      | 'NotSettled'
+      | 'FullyRefunded'
       | 'DisputeWindowClosed'
       | 'AlreadyDisputed';
     DisputeEligibilityDto: {
@@ -261,8 +288,9 @@ export interface components {
       status: string;
     };
     DisputeReasonDto: {
+      id: string;
+      label: string;
       code: string;
-      description: string;
     };
     /** @enum {unknown} */
     DisputeState: 'Pending' | 'Completed';
@@ -273,15 +301,17 @@ export interface components {
       id: string;
       reference: string;
       /** Format: uuid */
-      debitOrderId: string;
-      creditorName: string;
+      transactionId: string;
+      transactionType: components['schemas']['DisputedTransactionType'];
+      counterpartyName: string;
       /** Format: double */
       amount: number | string;
       currency: string;
       /** Format: date */
-      actionDate: string;
+      transactionDate: string;
+      reasonId: string;
       reasonCode: string;
-      reasonDescription: string;
+      reasonLabel: string;
       status: components['schemas']['DisputeStatus'];
       state: components['schemas']['DisputeState'];
       /** Format: date-time */
@@ -289,6 +319,8 @@ export interface components {
       /** Format: date-time */
       completedAt: null | string;
     };
+    /** @enum {unknown} */
+    DisputedTransactionType: 'DebitOrder' | 'Card';
     MandateDto: {
       /** Format: uuid */
       id: string;
@@ -315,8 +347,6 @@ export interface components {
       status: components['schemas']['MandateStatus'];
     };
     /** @enum {unknown} */
-    MandateKind: 'DebiCheck' | 'Registered' | null;
-    /** @enum {unknown} */
     MandateStatus: 'Active' | 'Suspended' | 'Cancelled' | 'Expired';
     /** @enum {unknown} */
     MandateType: 'DebiCheck' | 'Registered';
@@ -334,17 +364,6 @@ export interface components {
       /** Format: date-time */
       createdAt: string;
       isRead: boolean;
-    };
-    PagedResultOfDebitOrderDto: {
-      items: components['schemas']['DebitOrderDto'][];
-      /** Format: int32 */
-      page: number | string;
-      /** Format: int32 */
-      pageSize: number | string;
-      /** Format: int32 */
-      totalItems: number | string;
-      /** Format: int32 */
-      totalPages?: number | string;
     };
     PagedResultOfDisputeSummaryDto: {
       items: components['schemas']['DisputeSummaryDto'][];
@@ -379,6 +398,17 @@ export interface components {
       /** Format: int32 */
       totalPages?: number | string;
     };
+    PagedResultOfTransactionDto: {
+      items: components['schemas']['TransactionDto'][];
+      /** Format: int32 */
+      page: number | string;
+      /** Format: int32 */
+      pageSize: number | string;
+      /** Format: int32 */
+      totalItems: number | string;
+      /** Format: int32 */
+      totalPages?: number | string;
+    };
     ProblemDetails: {
       type?: null | string;
       title?: null | string;
@@ -391,9 +421,27 @@ export interface components {
     SequenceType: 'First' | 'Recurring' | 'Final' | 'OnceOff';
     SubmitDisputeRequest: {
       /** Format: uuid */
-      debitOrderId: string;
-      reasonCode: string;
+      transactionId: string;
+      reasonId: string;
     };
+    TransactionDto: {
+      /** Format: uuid */
+      id: string;
+      type: components['schemas']['TransactionType'];
+      counterpartyName: string;
+      /** Format: double */
+      amount: number | string;
+      currency: string;
+      /** Format: date */
+      effectiveDate: string;
+      accountMasked: string;
+      eligibility: components['schemas']['DisputeEligibilityDto'];
+      dispute: null | components['schemas']['DisputeLinkDto'];
+      debitOrder: null | components['schemas']['DebitOrderDetailDto'];
+      card: null | components['schemas']['CardDetailDto'];
+    };
+    /** @enum {unknown} */
+    TransactionType: 'DebitOrder' | 'Card';
     UnreadCountDto: {
       /** Format: int32 */
       unread: number | string;
@@ -418,154 +466,6 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  ListDebitOrders: {
-    parameters: {
-      query?: {
-        status?: components['schemas']['DebitOrderStatus'];
-        mandateType?: components['schemas']['MandateType'];
-        from?: string;
-        to?: string;
-        sort?: string;
-        page?: number | string;
-        pageSize?: number | string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'text/plain': components['schemas']['PagedResultOfDebitOrderDto'];
-          'application/json': components['schemas']['PagedResultOfDebitOrderDto'];
-          'text/json': components['schemas']['PagedResultOfDebitOrderDto'];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'text/plain': components['schemas']['ValidationProblemDetails'];
-          'application/json': components['schemas']['ValidationProblemDetails'];
-          'text/json': components['schemas']['ValidationProblemDetails'];
-        };
-      };
-    };
-  };
-  GetDebitOrder: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'text/plain': components['schemas']['DebitOrderDto'];
-          'application/json': components['schemas']['DebitOrderDto'];
-          'text/json': components['schemas']['DebitOrderDto'];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'text/plain': components['schemas']['ProblemDetails'];
-          'application/json': components['schemas']['ProblemDetails'];
-          'text/json': components['schemas']['ProblemDetails'];
-        };
-      };
-    };
-  };
-  ListMandates: {
-    parameters: {
-      query?: {
-        type?: components['schemas']['MandateType'];
-        page?: number | string;
-        pageSize?: number | string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'text/plain': components['schemas']['PagedResultOfMandateDto'];
-          'application/json': components['schemas']['PagedResultOfMandateDto'];
-          'text/json': components['schemas']['PagedResultOfMandateDto'];
-        };
-      };
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'text/plain': components['schemas']['ValidationProblemDetails'];
-          'application/json': components['schemas']['ValidationProblemDetails'];
-          'text/json': components['schemas']['ValidationProblemDetails'];
-        };
-      };
-    };
-  };
-  GetMandate: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'text/plain': components['schemas']['MandateDto'];
-          'application/json': components['schemas']['MandateDto'];
-          'text/json': components['schemas']['MandateDto'];
-        };
-      };
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'text/plain': components['schemas']['ProblemDetails'];
-          'application/json': components['schemas']['ProblemDetails'];
-          'text/json': components['schemas']['ProblemDetails'];
-        };
-      };
-    };
-  };
   ListDisputes: {
     parameters: {
       query?: {
@@ -725,8 +625,8 @@ export interface operations {
   };
   ListDisputeReasons: {
     parameters: {
-      query?: {
-        mandateType?: components['schemas']['MandateKind'];
+      query: {
+        transactionId: string;
       };
       header?: never;
       path?: never;
@@ -743,6 +643,28 @@ export interface operations {
           'text/plain': components['schemas']['DisputeReasonDto'][];
           'application/json': components['schemas']['DisputeReasonDto'][];
           'text/json': components['schemas']['DisputeReasonDto'][];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ValidationProblemDetails'];
+          'application/json': components['schemas']['ValidationProblemDetails'];
+          'text/json': components['schemas']['ValidationProblemDetails'];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
         };
       };
     };
@@ -826,6 +748,156 @@ export interface operations {
           'text/plain': components['schemas']['NotificationDto'];
           'application/json': components['schemas']['NotificationDto'];
           'text/json': components['schemas']['NotificationDto'];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+    };
+  };
+  ListMandates: {
+    parameters: {
+      query?: {
+        type?: components['schemas']['MandateType'];
+        page?: number | string;
+        pageSize?: number | string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['PagedResultOfMandateDto'];
+          'application/json': components['schemas']['PagedResultOfMandateDto'];
+          'text/json': components['schemas']['PagedResultOfMandateDto'];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ValidationProblemDetails'];
+          'application/json': components['schemas']['ValidationProblemDetails'];
+          'text/json': components['schemas']['ValidationProblemDetails'];
+        };
+      };
+    };
+  };
+  GetMandate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['MandateDto'];
+          'application/json': components['schemas']['MandateDto'];
+          'text/json': components['schemas']['MandateDto'];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+    };
+  };
+  ListTransactions: {
+    parameters: {
+      query: {
+        type: components['schemas']['TransactionType'];
+        mandateType?: components['schemas']['DebitOrderType'];
+        debitOrderStatus?: components['schemas']['DebitOrderStatus'];
+        cardStatus?: components['schemas']['CardSettlementStatus'];
+        from?: string;
+        to?: string;
+        sort?: string;
+        page?: number | string;
+        pageSize?: number | string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['PagedResultOfTransactionDto'];
+          'application/json': components['schemas']['PagedResultOfTransactionDto'];
+          'text/json': components['schemas']['PagedResultOfTransactionDto'];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ValidationProblemDetails'];
+          'application/json': components['schemas']['ValidationProblemDetails'];
+          'text/json': components['schemas']['ValidationProblemDetails'];
+        };
+      };
+    };
+  };
+  GetTransaction: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['TransactionDto'];
+          'application/json': components['schemas']['TransactionDto'];
+          'text/json': components['schemas']['TransactionDto'];
         };
       };
       /** @description Not Found */

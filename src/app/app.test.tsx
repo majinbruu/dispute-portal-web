@@ -20,7 +20,7 @@ describe('AppLayout', () => {
 
     expect(screen.getByRole('link', { name: 'ACME Bank' })).toHaveAttribute('href', '/');
     const nav = screen.getByRole('navigation', { name: 'Main' });
-    for (const name of ['Debit orders', 'Disputes', 'Mandates', 'Inbox']) {
+    for (const name of ['Transactions', 'Disputes', 'Mandates', 'Inbox']) {
       expect(within(nav).getByRole('link', { name })).toBeInTheDocument();
     }
     expect(screen.getByText('Thandi Mokoena')).toBeInTheDocument();
@@ -77,9 +77,9 @@ describe('routing', () => {
     renderApp({ routes, at: '/does-not-exist' });
 
     expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Go to my debit orders' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Go to my transactions' })).toHaveAttribute(
       'href',
-      '/debit-orders',
+      '/transactions',
     );
   });
 });

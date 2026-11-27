@@ -1,6 +1,6 @@
 import type { Problem } from '../../lib/problem';
 
-export type SubmitErrorAction = 'viewDebitOrder' | 'viewDisputes' | 'changeReason' | 'retry';
+export type SubmitErrorAction = 'viewTransaction' | 'viewDisputes' | 'changeReason' | 'retry';
 
 export interface SubmitErrorView {
   /** Plain-language summary of what went wrong; the API's own detail is shown underneath. */
@@ -12,23 +12,35 @@ export interface SubmitErrorView {
 /** Every error code `POST /disputes` is documented to return, mapped to a clear message. */
 const BY_CODE: Record<string, SubmitErrorView> = {
   already_disputed: {
-    message: 'This debit order has already been disputed',
-    action: 'viewDebitOrder',
+    message: 'This transaction has already been disputed',
+    action: 'viewTransaction',
   },
   dispute_window_closed: {
-    message: 'The time allowed to dispute this debit order has passed',
-    action: 'viewDebitOrder',
+    message: 'The time allowed to dispute this transaction has passed',
+    action: 'viewTransaction',
   },
   within_mandate_terms: {
     message: 'This debit order was collected within the terms of your mandate',
-    action: 'viewDebitOrder',
+    action: 'viewTransaction',
   },
   collection_rejected: {
     message: 'This collection was rejected, so there is nothing to dispute',
-    action: 'viewDebitOrder',
+    action: 'viewTransaction',
+  },
+  not_a_purchase: {
+    message: 'Only card purchases can be disputed here',
+    action: 'viewTransaction',
+  },
+  not_settled: {
+    message: 'This card transaction has not been settled yet',
+    action: 'viewTransaction',
+  },
+  fully_refunded: {
+    message: 'This card transaction has already been refunded in full',
+    action: 'viewTransaction',
   },
   reason_not_allowed: {
-    message: 'That reason cannot be used for this debit order',
+    message: 'That reason cannot be used for this transaction',
     action: 'changeReason',
   },
   idempotency_key_reused: {
@@ -43,9 +55,9 @@ const BY_CODE: Record<string, SubmitErrorView> = {
     message: 'Too many attempts. Wait a moment, then try again',
     action: 'retry',
   },
-  not_found: {
-    message: 'We could not find this debit order',
-    action: 'viewDebitOrder',
+  transaction_not_found: {
+    message: 'We could not find this transaction',
+    action: 'viewTransaction',
   },
   network_error: {
     message: 'We could not confirm your dispute. It is safe to try again',
