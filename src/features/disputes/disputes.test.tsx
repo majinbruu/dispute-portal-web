@@ -32,16 +32,19 @@ const refunded = disputeDetail({
     {
       status: 'Refunded',
       description: 'The scheme upheld your dispute and you were refunded.',
+      actor: 'System',
       occurredAt: '2026-03-05T08:15:40Z',
     },
     {
       status: 'Submitted',
       description: 'We received your dispute.',
+      actor: 'Customer',
       occurredAt: '2026-03-05T08:15:00Z',
     },
     {
       status: 'SentToScheme',
       description: 'Your dispute was sent to the payment scheme.',
+      actor: 'Agent',
       occurredAt: '2026-03-05T08:15:10Z',
     },
   ],

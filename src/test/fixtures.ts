@@ -184,9 +184,11 @@ export function disputeDetail(overrides: Partial<DisputeDetail> = {}): DisputeDe
       {
         status: 'Submitted',
         description: 'We received your dispute.',
+        actor: 'Customer',
         occurredAt: '2026-03-05T08:15:00Z',
       },
     ],
+    comments: [],
     ...overrides,
   };
 }

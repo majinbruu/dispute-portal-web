@@ -100,6 +100,28 @@ describe('inbox', () => {
     );
   });
 
+  it.each([
+    ['DisputeWithdrawn', 'Dispute withdrawn', 'You withdrew your dispute'],
+    ['DisputeComment', 'New comment', 'ACME Bank commented on your dispute'],
+  ] as const)('shows a %s message under the label "%s"', async (category, label, title) => {
+    const { user } = renderApp({
+      routes: inboxRoutes,
+      at: '/inbox',
+      api: {
+        [LIST]: paged([notification({ category, title, isRead: true })]),
+        [COUNT]: { unread: 0 },
+      },
+    });
+
+    await user.click(await screen.findByRole('button', { name: new RegExp(title) }));
+
+    expect(screen.getByText(label)).toBeVisible();
+    expect(screen.getByRole('link', { name: 'View dispute' })).toHaveAttribute(
+      'href',
+      `/disputes/${DISPUTE_ID}`,
+    );
+  });
+
   it('reports a failure to mark a message as read', async () => {
     const { user } = renderApp({
       routes: inboxRoutes,

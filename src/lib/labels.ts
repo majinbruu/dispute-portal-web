@@ -25,6 +25,7 @@ const DISPUTE_STATUS_LABELS: Record<string, string> = {
   SentToScheme: 'Processing',
   Refunded: 'Refunded',
   Declined: 'Declined',
+  Withdrawn: 'Withdrawn',
 };
 
 export function disputeStatusLabel(status: string): string {

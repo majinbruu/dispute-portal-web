@@ -6,4 +6,5 @@ export const DISPUTE_STATUS_TONE: Record<DisputeStatus, BadgeTone> = {
   SentToScheme: 'warning',
   Refunded: 'success',
   Declined: 'danger',
+  Withdrawn: 'neutral',
 };

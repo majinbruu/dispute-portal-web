@@ -4,6 +4,91 @@
  */
 
 export interface paths {
+  '/api/v1/agent/disputes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Lists disputes across all customers. By default the review queue: disputes waiting for review first, oldest first. */
+    get: operations['ListDisputesForAgent'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/agent/disputes/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Returns one dispute with the disputed transaction, the audit trail of who did what, and the comment thread. */
+    get: operations['GetDisputeForAgent'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/agent/disputes/{id}/approve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Approves a dispute that waits for review, which sends it for processing. Returns 409 if it was already reviewed or withdrawn. */
+    post: operations['ApproveDispute'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/agent/disputes/{id}/reject': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Rejects a dispute that waits for review. The reason is shown to the customer as the outcome. Returns 409 if it was already reviewed or withdrawn. */
+    post: operations['RejectDispute'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/agent/disputes/{id}/comments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Adds an agent's comment to a dispute while it is open. The customer is notified in their inbox. Returns 409 once the dispute is closed. */
+    post: operations['AddDisputeCommentAsAgent'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/disputes': {
     parameters: {
       query?: never;
@@ -14,7 +99,7 @@ export interface paths {
     /** Lists the customer's disputes, newest first. Filter by state to get pending or completed disputes. */
     get: operations['ListDisputes'];
     put?: never;
-    /** Raises a dispute against a debit order or a card transaction. Requires an Idempotency-Key header, which makes retries safe. */
+    /** Raises a dispute against a debit order or a card transaction, with an optional comment. Requires an Idempotency-Key header, which makes retries safe. */
     post: operations['SubmitDispute'];
     delete?: never;
     options?: never;
@@ -29,10 +114,44 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** Returns one dispute with its progress timeline. */
+    /** Returns one dispute with its progress timeline and its comment thread. */
     get: operations['GetDispute'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/disputes/{id}/withdraw': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Withdraws the customer's own dispute while it still waits for review. Returns 409 once it has been reviewed. */
+    post: operations['WithdrawDispute'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/disputes/{id}/comments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Adds a comment to the customer's own dispute while it is open. Returns 409 once the dispute is refunded, declined or withdrawn. */
+    post: operations['AddDisputeComment'];
     delete?: never;
     options?: never;
     head?: never;
@@ -179,6 +298,71 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    AddCommentRequest: {
+      body: string;
+    };
+    AgentDisputeCommentDto: {
+      /** Format: uuid */
+      id: string;
+      authorType: components['schemas']['DisputeActorType'];
+      /** Format: uuid */
+      authorSubjectId: string;
+      body: string;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    AgentDisputeDetailDto: {
+      /** Format: uuid */
+      id: string;
+      reference: string;
+      /** Format: uuid */
+      customerId: string;
+      transaction: components['schemas']['DisputedTransactionDto'];
+      reasonId: string;
+      reasonCode: string;
+      reasonLabel: string;
+      status: components['schemas']['DisputeStatus'];
+      /** Format: date-time */
+      submittedAt: string;
+      /** Format: date-time */
+      sentToSchemeAt: null | string;
+      /** Format: date-time */
+      completedAt: null | string;
+      outcomeNote: null | string;
+      events: components['schemas']['AgentDisputeEventDto'][];
+      comments: components['schemas']['AgentDisputeCommentDto'][];
+    };
+    AgentDisputeEventDto: {
+      status: components['schemas']['DisputeStatus'];
+      description: string;
+      actor: components['schemas']['DisputeActorType'];
+      /** Format: uuid */
+      actorSubjectId: null | string;
+      /** Format: date-time */
+      occurredAt: string;
+    };
+    AgentDisputeSummaryDto: {
+      /** Format: uuid */
+      id: string;
+      reference: string;
+      /** Format: uuid */
+      customerId: string;
+      transactionType: components['schemas']['DisputedTransactionType'];
+      counterpartyName: string;
+      /** Format: double */
+      amount: number | string;
+      currency: string;
+      /** Format: date */
+      transactionDate: string;
+      reasonId: string;
+      reasonCode: string;
+      reasonLabel: string;
+      status: components['schemas']['DisputeStatus'];
+      /** Format: date-time */
+      submittedAt: string;
+      /** Format: date-time */
+      completedAt: null | string;
+    };
     CardDetailDto: {
       cardNumberMasked: string;
       scheme: components['schemas']['CardScheme'];
@@ -229,6 +413,16 @@ export interface components {
     DebitOrderStatus: 'Accepted' | 'Rejected';
     /** @enum {unknown} */
     DebitOrderType: 'DebiCheck' | 'Registered' | 'Eft';
+    /** @enum {unknown} */
+    DisputeActorType: 'Customer' | 'Agent' | 'System';
+    DisputeCommentDto: {
+      /** Format: uuid */
+      id: string;
+      authorType: components['schemas']['DisputeActorType'];
+      body: string;
+      /** Format: date-time */
+      createdAt: string;
+    };
     DisputeDetailDto: {
       /** Format: uuid */
       id: string;
@@ -257,6 +451,7 @@ export interface components {
       completedAt: null | string;
       outcomeNote: null | string;
       events: components['schemas']['DisputeEventDto'][];
+      comments: components['schemas']['DisputeCommentDto'][];
     };
     /** @enum {unknown} */
     DisputeEligibility:
@@ -278,6 +473,7 @@ export interface components {
     DisputeEventDto: {
       status: components['schemas']['DisputeStatus'];
       description: string;
+      actor: components['schemas']['DisputeActorType'];
       /** Format: date-time */
       occurredAt: string;
     };
@@ -295,7 +491,7 @@ export interface components {
     /** @enum {unknown} */
     DisputeState: 'Pending' | 'Completed';
     /** @enum {unknown} */
-    DisputeStatus: 'Submitted' | 'SentToScheme' | 'Refunded' | 'Declined';
+    DisputeStatus: 'Submitted' | 'SentToScheme' | 'Refunded' | 'Declined' | 'Withdrawn';
     DisputeSummaryDto: {
       /** Format: uuid */
       id: string;
@@ -318,6 +514,24 @@ export interface components {
       submittedAt: string;
       /** Format: date-time */
       completedAt: null | string;
+    };
+    DisputedTransactionDto: {
+      /** Format: uuid */
+      id: string;
+      type: components['schemas']['DisputedTransactionType'];
+      schemeReference: string;
+      counterpartyName: string;
+      /** Format: double */
+      amount: number | string;
+      currency: string;
+      /** Format: date */
+      transactionDate: string;
+      /** Format: date */
+      postingDate: null | string;
+      accountMasked: string;
+      mandateType: null | string;
+      mandateReference: null | string;
+      cardScheme: null | string;
     };
     /** @enum {unknown} */
     DisputedTransactionType: 'DebitOrder' | 'Card';
@@ -352,7 +566,12 @@ export interface components {
     MandateType: 'DebiCheck' | 'Registered';
     /** @enum {unknown} */
     NotificationCategory:
-      'DisputeReceived' | 'DisputeInProgress' | 'DisputeRefunded' | 'DisputeDeclined';
+      | 'DisputeReceived'
+      | 'DisputeInProgress'
+      | 'DisputeRefunded'
+      | 'DisputeDeclined'
+      | 'DisputeWithdrawn'
+      | 'DisputeComment';
     NotificationDto: {
       /** Format: uuid */
       id: string;
@@ -364,6 +583,17 @@ export interface components {
       /** Format: date-time */
       createdAt: string;
       isRead: boolean;
+    };
+    PagedResultOfAgentDisputeSummaryDto: {
+      items: components['schemas']['AgentDisputeSummaryDto'][];
+      /** Format: int32 */
+      page: number | string;
+      /** Format: int32 */
+      pageSize: number | string;
+      /** Format: int32 */
+      totalItems: number | string;
+      /** Format: int32 */
+      totalPages?: number | string;
     };
     PagedResultOfDisputeSummaryDto: {
       items: components['schemas']['DisputeSummaryDto'][];
@@ -417,12 +647,16 @@ export interface components {
       detail?: null | string;
       instance?: null | string;
     };
+    RejectDisputeRequest: {
+      reason: string;
+    };
     /** @enum {unknown} */
     SequenceType: 'First' | 'Recurring' | 'Final' | 'OnceOff';
     SubmitDisputeRequest: {
       /** Format: uuid */
       transactionId: string;
       reasonId: string;
+      comment?: null | string;
     };
     TransactionDto: {
       /** Format: uuid */
@@ -466,6 +700,264 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  ListDisputesForAgent: {
+    parameters: {
+      query?: {
+        status?: components['schemas']['DisputeStatus'];
+        transactionType?: components['schemas']['DisputedTransactionType'];
+        reference?: string;
+        sort?: string;
+        page?: number | string;
+        pageSize?: number | string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['PagedResultOfAgentDisputeSummaryDto'];
+          'application/json': components['schemas']['PagedResultOfAgentDisputeSummaryDto'];
+          'text/json': components['schemas']['PagedResultOfAgentDisputeSummaryDto'];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ValidationProblemDetails'];
+          'application/json': components['schemas']['ValidationProblemDetails'];
+          'text/json': components['schemas']['ValidationProblemDetails'];
+        };
+      };
+    };
+  };
+  GetDisputeForAgent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['AgentDisputeDetailDto'];
+          'application/json': components['schemas']['AgentDisputeDetailDto'];
+          'text/json': components['schemas']['AgentDisputeDetailDto'];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+    };
+  };
+  ApproveDispute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['AgentDisputeDetailDto'];
+          'application/json': components['schemas']['AgentDisputeDetailDto'];
+          'text/json': components['schemas']['AgentDisputeDetailDto'];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+    };
+  };
+  RejectDispute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RejectDisputeRequest'];
+        'text/json': components['schemas']['RejectDisputeRequest'];
+        'application/*+json': components['schemas']['RejectDisputeRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['AgentDisputeDetailDto'];
+          'application/json': components['schemas']['AgentDisputeDetailDto'];
+          'text/json': components['schemas']['AgentDisputeDetailDto'];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ValidationProblemDetails'];
+          'application/json': components['schemas']['ValidationProblemDetails'];
+          'text/json': components['schemas']['ValidationProblemDetails'];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+    };
+  };
+  AddDisputeCommentAsAgent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AddCommentRequest'];
+        'text/json': components['schemas']['AddCommentRequest'];
+        'application/*+json': components['schemas']['AddCommentRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['AgentDisputeDetailDto'];
+          'application/json': components['schemas']['AgentDisputeDetailDto'];
+          'text/json': components['schemas']['AgentDisputeDetailDto'];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ValidationProblemDetails'];
+          'application/json': components['schemas']['ValidationProblemDetails'];
+          'text/json': components['schemas']['ValidationProblemDetails'];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+    };
+  };
   ListDisputes: {
     parameters: {
       query?: {
@@ -612,6 +1104,126 @@ export interface operations {
       };
       /** @description Not Found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+    };
+  };
+  WithdrawDispute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['DisputeDetailDto'];
+          'application/json': components['schemas']['DisputeDetailDto'];
+          'text/json': components['schemas']['DisputeDetailDto'];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+    };
+  };
+  AddDisputeComment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AddCommentRequest'];
+        'text/json': components['schemas']['AddCommentRequest'];
+        'application/*+json': components['schemas']['AddCommentRequest'];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['DisputeDetailDto'];
+          'application/json': components['schemas']['DisputeDetailDto'];
+          'text/json': components['schemas']['DisputeDetailDto'];
+        };
+      };
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ValidationProblemDetails'];
+          'application/json': components['schemas']['ValidationProblemDetails'];
+          'text/json': components['schemas']['ValidationProblemDetails'];
+        };
+      };
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/plain': components['schemas']['ProblemDetails'];
+          'application/json': components['schemas']['ProblemDetails'];
+          'text/json': components['schemas']['ProblemDetails'];
+        };
+      };
+      /** @description Too Many Requests */
+      429: {
         headers: {
           [name: string]: unknown;
         };

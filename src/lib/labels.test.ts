@@ -29,6 +29,7 @@ describe('disputeStatusLabel', () => {
     ['SentToScheme', 'Processing'],
     ['Refunded', 'Refunded'],
     ['Declined', 'Declined'],
+    ['Withdrawn', 'Withdrawn'],
     ['UnderReview', 'Under review'],
   ])('labels %s as %s', (status, label) => {
     expect(disputeStatusLabel(status)).toBe(label);

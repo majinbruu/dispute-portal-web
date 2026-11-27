@@ -19,6 +19,8 @@ const CATEGORY: Record<Notification['category'], { label: string; tone: BadgeTon
   DisputeInProgress: { label: 'Dispute in progress', tone: 'warning' },
   DisputeRefunded: { label: 'Dispute refunded', tone: 'success' },
   DisputeDeclined: { label: 'Dispute declined', tone: 'danger' },
+  DisputeWithdrawn: { label: 'Dispute withdrawn', tone: 'neutral' },
+  DisputeComment: { label: 'New comment', tone: 'info' },
 };
 
 interface NotificationItemProps {
