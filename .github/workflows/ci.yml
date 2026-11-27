@@ -60,11 +60,79 @@ jobs:
       - name: Build image
         run: docker build -t dispute-portal-web:ci .
 
+  e2e:
+    name: End-to-end journeys
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: dispute-portal-web
+    steps:
+      # The two repositories are checked out side by side, which is where the API repository's
+      # Compose files expect to find this one.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: dispute-portal-web
+          persist-credentials: false
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: majinbruu/dispute-portal-api
+          path: dispute-portal-api
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: dispute-portal-web/.nvmrc
+          cache: npm
+          cache-dependency-path: dispute-portal-web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install the browser
+        run: npx playwright install --with-deps --only-shell chromium
+
+      - name: Start PostgreSQL, Keycloak and the published API image
+        working-directory: dispute-portal-api
+        run: docker compose up --detach --wait --wait-timeout 300 api
+
+      - name: Build the web image from this commit and start it
+        working-directory: dispute-portal-api
+        # The build file names this checkout as the web image's source. Only the web service is
+        # built and started, so the API keeps running from its published image.
+        run: >
+          docker compose -f docker-compose.yml -f docker-compose.build.yml
+          up --detach --build --no-deps --wait --wait-timeout 120 web
+
+      - name: Run the journeys
+        run: npm run e2e
+
+      - name: Show the stack's logs
+        if: failure()
+        working-directory: dispute-portal-api
+        run: docker compose logs --no-color --tail 200
+
+      - name: Upload the report and traces
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report
+          path: |
+            dispute-portal-web/playwright-report
+            dispute-portal-web/test-results
+          retention-days: 7
+
+      - name: Stop the stack
+        if: always()
+        working-directory: dispute-portal-api
+        run: docker compose down --volumes
+
   publish:
     name: Publish image
     # Only for commits that reach main, and only after every check above has passed. Pull requests never publish.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [verify, docker]
+    needs: [verify, docker, e2e]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # The only job that may write packages. The token is the workflow's own, so there is no stored registry secret.
