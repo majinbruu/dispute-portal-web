@@ -1,8 +1,10 @@
 import type {
+  AgentDisputeSummary,
   CardStatus,
   DebitOrderStatus,
   DebitOrderType,
   DisputeState,
+  DisputeStatus,
   MandateType,
   TransactionSort,
 } from './types';
@@ -40,6 +42,16 @@ export interface DisputeFilters {
   pageSize: number;
 }
 
+/** The agent's list of disputes across all customers. Every filter is optional. */
+export interface AgentDisputeFilters {
+  status?: DisputeStatus;
+  transactionType?: AgentDisputeSummary['transactionType'];
+  /** Part of a dispute reference. */
+  reference?: string;
+  page: number;
+  pageSize: number;
+}
+
 export interface NotificationFilters {
   page: number;
   pageSize: number;
@@ -63,6 +75,10 @@ export const queryKeys = {
     lists: ['disputes', 'list'] as const,
     list: (filters: DisputeFilters) => ['disputes', 'list', filters] as const,
     detail: (id: string) => ['disputes', 'detail', id] as const,
+  },
+  agentDisputes: {
+    lists: ['agent-disputes', 'list'] as const,
+    list: (filters: AgentDisputeFilters) => ['agent-disputes', 'list', filters] as const,
   },
   notifications: {
     all: ['notifications'] as const,

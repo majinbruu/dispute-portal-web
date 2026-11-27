@@ -5,6 +5,7 @@ import { useApiClient } from './apiContext';
 import { unwrap } from './client';
 import { normalizePaged } from './paging';
 import {
+  type AgentDisputeFilters,
   type DisputeFilters,
   type MandateFilters,
   type NotificationFilters,
@@ -199,6 +200,22 @@ export function useAddDisputeComment(id: string) {
         void queryClient.invalidateQueries({ queryKey: queryKeys.disputes.detail(id) });
       }
     },
+  });
+}
+
+/**
+ * The agent's list of disputes across all customers. No sort is sent, which makes it the review
+ * queue: disputes waiting for review first, the oldest of them at the top.
+ */
+export function useAgentDisputes(filters: AgentDisputeFilters) {
+  const api = useApiClient();
+  return useQuery({
+    queryKey: queryKeys.agentDisputes.list(filters),
+    queryFn: async ({ signal }) =>
+      normalizePaged(
+        await unwrap(api.GET('/api/v1/agent/disputes', { params: { query: filters }, signal })),
+      ),
+    placeholderData: keepPreviousData,
   });
 }
 

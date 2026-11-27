@@ -1,4 +1,5 @@
 import type {
+  AgentDisputeSummary,
   CardDetail,
   DebitOrderDetail,
   DisputeDetail,
@@ -14,6 +15,8 @@ export const CARD_TRANSACTION_ID = '55555555-5555-4555-8555-555555555555';
 export const MANDATE_ID = '22222222-2222-4222-8222-222222222222';
 export const DISPUTE_ID = '33333333-3333-4333-8333-333333333333';
 export const NOTIFICATION_ID = '44444444-4444-4444-8444-444444444444';
+export const CUSTOMER_ID = '66666666-6666-4666-8666-666666666666';
+export const AGENT_ID = '77777777-7777-4777-8777-777777777777';
 
 /** A DebiCheck debit order; `detail` overrides the debit order's own fields. */
 export function debitOrder(
@@ -221,6 +224,29 @@ export function notification(overrides: Partial<Notification> = {}): Notificatio
     relatedDisputeId: DISPUTE_ID,
     createdAt: '2026-03-05T08:15:00Z',
     isRead: false,
+    ...overrides,
+  };
+}
+
+/** A dispute as an agent sees it in the queue: any customer's, with that customer's ID. */
+export function agentDisputeSummary(
+  overrides: Partial<AgentDisputeSummary> = {},
+): AgentDisputeSummary {
+  return {
+    id: DISPUTE_ID,
+    reference: 'DSP-2026-000123',
+    customerId: CUSTOMER_ID,
+    transactionType: 'DebitOrder',
+    counterpartyName: 'FitLife Gym',
+    amount: 499.0,
+    currency: 'ZAR',
+    transactionDate: '2026-03-01',
+    reasonId: 'not_authorised',
+    reasonCode: 'MD01',
+    reasonLabel: 'I did not authorise this debit order',
+    status: 'Submitted',
+    submittedAt: '2026-03-05T08:15:00Z',
+    completedAt: null,
     ...overrides,
   };
 }

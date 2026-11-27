@@ -46,6 +46,7 @@ export default defineConfig({
         'src/auth/**': coverageThreshold,
         'src/lib/**': coverageThreshold,
         'src/components/**': coverageThreshold,
+        'src/features/agent/**': coverageThreshold,
       },
     },
   },

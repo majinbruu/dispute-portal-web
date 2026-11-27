@@ -9,6 +9,7 @@ import {
   type TransactionSort,
   type TransactionType,
 } from '../../api/types';
+import { oneOf } from '../../lib/oneOf';
 
 export const TRANSACTION_PAGE_SIZE = 10;
 export const DEFAULT_SORT: TransactionSort = '-effectiveDate';
@@ -19,10 +20,6 @@ export const TRANSACTION_TYPES: readonly TransactionType[] = ['DebitOrder', 'Car
 export const MANDATE_TYPES: readonly DebitOrderType[] = ['DebiCheck', 'Registered', 'Eft'];
 export const DEBIT_ORDER_STATUSES: readonly DebitOrderStatus[] = ['Accepted', 'Rejected'];
 export const CARD_STATUSES: readonly CardStatus[] = ['Settled', 'Pending', 'Declined', 'Reversed'];
-
-function oneOf<T extends string>(allowed: readonly T[], value: string | null): T | undefined {
-  return allowed.find((candidate) => candidate === value);
-}
 
 /**
  * Reads the list filters from the query string, ignoring anything that is not a known value.
