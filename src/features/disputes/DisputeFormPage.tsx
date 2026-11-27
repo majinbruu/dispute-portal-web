@@ -1,14 +1,11 @@
-import { useParams } from 'react-router';
+import { Navigate, useParams } from 'react-router';
 import { useDisputeReasons, useTransaction } from '../../api/queries';
 import type { Transaction } from '../../api/types';
-import { ButtonLink } from '../../components/Button';
 import { Card } from '../../components/Card';
-import { EmptyState } from '../../components/EmptyState';
 import { ErrorState } from '../../components/ErrorState';
 import { PageHeader } from '../../components/PageHeader';
 import { Spinner } from '../../components/Spinner';
 import { formatDate, formatMoney } from '../../lib/format';
-import { transactionTypeNoun } from '../../lib/labels';
 import { toProblem } from '../../lib/problem';
 import { transactionSummary } from '../transactions/presentation';
 import { DisputeForm } from './DisputeForm';
@@ -49,13 +46,9 @@ function Reasons({ transaction }: { transaction: Transaction }) {
       />
     );
   }
+  // No reason to choose means there is no dispute to raise, so there is no form to show either.
   if (query.data.length === 0) {
-    return (
-      <EmptyState
-        title={`This ${transactionTypeNoun(transaction.type)} cannot be disputed online`}
-        description="No dispute reasons are available for this transaction."
-      />
-    );
+    return <Navigate to={`/transactions/${transaction.id}`} replace />;
   }
   return <DisputeForm transaction={transaction} reasons={query.data} />;
 }
@@ -87,33 +80,11 @@ export function DisputeFormPage() {
   }
 
   const transaction = query.data;
-  const noun = transactionTypeNoun(transaction.type);
-  // The API decides eligibility; the form is only offered when it says the transaction can be
-  // disputed. No screen links here otherwise, so this is only reached from a stale or typed URL.
+  // The API decides eligibility, and no screen links here unless it says the transaction can be
+  // disputed. A stale or typed URL goes back to the transaction, which shows what there is to do:
+  // nothing, or a link to the dispute that already exists.
   if (!transaction.eligibility.canDispute) {
-    return (
-      <>
-        <PageHeader title={TITLE} back={back} />
-        <div className={styles.stack}>
-          <TransactionSummary transaction={transaction} />
-          <EmptyState
-            title={`This ${noun} cannot be disputed`}
-            description={transaction.eligibility.message}
-            action={
-              transaction.dispute ? (
-                <ButtonLink to={`/disputes/${transaction.dispute.id}`}>
-                  View dispute progress
-                </ButtonLink>
-              ) : (
-                <ButtonLink to={back.to} variant="secondary">
-                  Back to {noun}
-                </ButtonLink>
-              )
-            }
-          />
-        </div>
-      </>
-    );
+    return <Navigate to={back.to} replace />;
   }
 
   return (

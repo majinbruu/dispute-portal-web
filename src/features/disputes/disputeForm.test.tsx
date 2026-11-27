@@ -457,8 +457,8 @@ describe('dispute form for a card purchase', () => {
     );
   });
 
-  it('does not offer the form for a card transaction that cannot be disputed', async () => {
-    renderApp({
+  it('goes back to a card transaction that is not eligible, without a message', async () => {
+    const { router } = renderApp({
       routes,
       at: `/transactions/${CARD_TRANSACTION_ID}/dispute`,
       api: {
@@ -473,18 +473,15 @@ describe('dispute form for a card purchase', () => {
       },
     });
 
-    expect(await screen.findByText('This card transaction cannot be disputed')).toBeVisible();
-    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Back to card transaction' })).toHaveAttribute(
-      'href',
-      `/transactions/${CARD_TRANSACTION_ID}`,
-    );
+    expect(await screen.findByText('Transaction screen')).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(`/transactions/${CARD_TRANSACTION_ID}`);
+    expect(screen.queryByText(/disputed|not been settled/)).not.toBeInTheDocument();
   });
 });
 
 describe('dispute form page guards', () => {
-  it('does not offer the form when the API says the order cannot be disputed', async () => {
-    renderApp({
+  it('goes back to the transaction when the API says it is not eligible, without a message', async () => {
+    const { router, fetchMock } = renderApp({
       routes,
       at: `/transactions/${TRANSACTION_ID}/dispute`,
       api: {
@@ -500,19 +497,36 @@ describe('dispute form page guards', () => {
       },
     });
 
-    expect(
-      await screen.findByText('The 40 day dispute window for this debit order has closed.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Transaction screen')).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(`/transactions/${TRANSACTION_ID}`);
+    expect(screen.queryByText(/disputed|dispute window/)).not.toBeInTheDocument();
     expect(screen.queryByRole('radio')).not.toBeInTheDocument();
-    expect(screen.getByText('This debit order cannot be disputed')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Back to debit order' })).toHaveAttribute(
-      'href',
-      `/transactions/${TRANSACTION_ID}`,
-    );
+    expect(requestsTo(fetchMock, 'GET', '/api/v1/dispute-reasons')).toHaveLength(0);
   });
 
-  it('links to the existing dispute instead of offering the form', async () => {
-    renderApp({
+  it('replaces the form URL in history, so Back does not return to it', async () => {
+    const { router } = renderApp({
+      routes,
+      at: `/transactions/${TRANSACTION_ID}/dispute`,
+      api: {
+        [ORDER]: debitOrder({
+          eligibility: {
+            canDispute: false,
+            code: 'DisputeWindowClosed',
+            message: 'The 40 day dispute window for this debit order has closed.',
+            lastDisputeDate: '2026-01-10',
+          },
+        }),
+      },
+    });
+
+    await screen.findByText('Transaction screen');
+
+    expect(router.state.historyAction).toBe('REPLACE');
+  });
+
+  it('goes back to the transaction when it already has a dispute', async () => {
+    const { router } = renderApp({
       routes,
       at: `/transactions/${TRANSACTION_ID}/dispute`,
       api: {
@@ -528,10 +542,8 @@ describe('dispute form page guards', () => {
       },
     });
 
-    expect(await screen.findByRole('link', { name: 'View dispute progress' })).toHaveAttribute(
-      'href',
-      `/disputes/${DISPUTE_ID}`,
-    );
+    expect(await screen.findByText('Transaction screen')).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(`/transactions/${TRANSACTION_ID}`);
   });
 
   it('shows problems loading the debit order or the reasons', async () => {
@@ -557,14 +569,15 @@ describe('dispute form page guards', () => {
     );
   });
 
-  it('explains when no reasons are available', async () => {
-    renderApp({
+  it('goes back to the transaction when the API offers no reasons, without a message', async () => {
+    const { router } = renderApp({
       routes,
       at: `/transactions/${TRANSACTION_ID}/dispute`,
       api: { [ORDER]: debitOrder(), [REASONS]: [] },
     });
 
-    expect(await screen.findByText('This debit order cannot be disputed online')).toBeVisible();
+    expect(await screen.findByText('Transaction screen')).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe(`/transactions/${TRANSACTION_ID}`);
   });
 });
 
