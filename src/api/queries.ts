@@ -12,7 +12,7 @@ import {
   queryKeys,
   type TransactionFilters,
 } from './queryKeys';
-import type { SubmitDisputeRequest } from './types';
+import type { AgentDisputeDetail, SubmitDisputeRequest } from './types';
 
 /** How often a pending dispute is re-read while it waits for review or for its outcome. */
 export const PENDING_DISPUTE_POLL_MS = 3_000;
@@ -216,6 +216,77 @@ export function useAgentDisputes(filters: AgentDisputeFilters) {
         await unwrap(api.GET('/api/v1/agent/disputes', { params: { query: filters }, signal })),
       ),
     placeholderData: keepPreviousData,
+  });
+}
+
+/** One dispute as an agent sees it: with the transaction, who did what, and the comments. */
+export function useAgentDispute(id: string) {
+  const api = useApiClient();
+  return useQuery({
+    queryKey: queryKeys.agentDisputes.detail(id),
+    queryFn: ({ signal }) =>
+      unwrap(api.GET('/api/v1/agent/disputes/{id}', { params: { path: { id } }, signal })),
+  });
+}
+
+/**
+ * How each of the agent's actions on a dispute ends. The API returns the dispute as it now is,
+ * which replaces the cached one, and the queue needs re-reading. A 409 means the dispute changed
+ * first (the customer withdrew it, or another agent acted), so everything is re-read and the
+ * screen shows what happened instead.
+ */
+function useAgentDisputeChange(id: string) {
+  const queryClient = useQueryClient();
+  return {
+    onSuccess: (dispute: AgentDisputeDetail) => {
+      queryClient.setQueryData(queryKeys.agentDisputes.detail(id), dispute);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.agentDisputes.lists });
+    },
+    onError: (error: Error) => {
+      if (isConflict(error)) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.agentDisputes.all });
+      }
+    },
+  };
+}
+
+/** Approves a dispute that waits for review, which sends it for processing. */
+export function useApproveDispute(id: string) {
+  const api = useApiClient();
+  return useMutation({
+    mutationFn: () =>
+      unwrap(api.POST('/api/v1/agent/disputes/{id}/approve', { params: { path: { id } } })),
+    ...useAgentDisputeChange(id),
+  });
+}
+
+/** Rejects a dispute that waits for review; the customer sees the reason as the outcome. */
+export function useRejectDispute(id: string) {
+  const api = useApiClient();
+  return useMutation({
+    mutationFn: (reason: string) =>
+      unwrap(
+        api.POST('/api/v1/agent/disputes/{id}/reject', {
+          params: { path: { id } },
+          body: { reason },
+        }),
+      ),
+    ...useAgentDisputeChange(id),
+  });
+}
+
+/** Adds an agent's comment to a dispute while it is open. */
+export function useAddAgentComment(id: string) {
+  const api = useApiClient();
+  return useMutation({
+    mutationFn: (body: string) =>
+      unwrap(
+        api.POST('/api/v1/agent/disputes/{id}/comments', {
+          params: { path: { id } },
+          body: { body },
+        }),
+      ),
+    ...useAgentDisputeChange(id),
   });
 }
 

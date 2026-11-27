@@ -77,8 +77,10 @@ export const queryKeys = {
     detail: (id: string) => ['disputes', 'detail', id] as const,
   },
   agentDisputes: {
+    all: ['agent-disputes'] as const,
     lists: ['agent-disputes', 'list'] as const,
     list: (filters: AgentDisputeFilters) => ['agent-disputes', 'list', filters] as const,
+    detail: (id: string) => ['agent-disputes', 'detail', id] as const,
   },
   notifications: {
     all: ['notifications'] as const,

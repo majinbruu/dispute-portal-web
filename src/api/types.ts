@@ -18,6 +18,7 @@ export type DisputeDetail = Schemas['DisputeDetailDto'];
 export type DisputeStatus = Schemas['DisputeStatus'];
 export type DisputeState = Schemas['DisputeState'];
 export type AgentDisputeSummary = Schemas['AgentDisputeSummaryDto'];
+export type AgentDisputeDetail = Schemas['AgentDisputeDetailDto'];
 export type SubmitDisputeRequest = Schemas['SubmitDisputeRequest'];
 export type Notification = Schemas['NotificationDto'];
 

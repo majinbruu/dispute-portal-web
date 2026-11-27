@@ -1,4 +1,5 @@
 import type {
+  AgentDisputeDetail,
   AgentDisputeSummary,
   CardDetail,
   DebitOrderDetail,
@@ -247,6 +248,50 @@ export function agentDisputeSummary(
     status: 'Submitted',
     submittedAt: '2026-03-05T08:15:00Z',
     completedAt: null,
+    ...overrides,
+  };
+}
+
+/** A debit order dispute that waits for review, as an agent sees it. */
+export function agentDisputeDetail(
+  overrides: Partial<AgentDisputeDetail> = {},
+): AgentDisputeDetail {
+  return {
+    id: DISPUTE_ID,
+    reference: 'DSP-2026-000123',
+    customerId: CUSTOMER_ID,
+    transaction: {
+      id: TRANSACTION_ID,
+      type: 'DebitOrder',
+      schemeReference: 'TXN-20260301-0001',
+      counterpartyName: 'FitLife Gym',
+      amount: 499.0,
+      currency: 'ZAR',
+      transactionDate: '2026-03-01',
+      postingDate: null,
+      accountMasked: '******4321',
+      mandateType: 'DebiCheck',
+      mandateReference: 'MND-0001',
+      cardScheme: null,
+    },
+    reasonId: 'not_authorised',
+    reasonCode: 'MD01',
+    reasonLabel: 'I did not authorise this debit order',
+    status: 'Submitted',
+    submittedAt: '2026-03-05T08:15:00Z',
+    sentToSchemeAt: null,
+    completedAt: null,
+    outcomeNote: null,
+    events: [
+      {
+        status: 'Submitted',
+        description: 'The customer raised the dispute.',
+        actor: 'Customer',
+        actorSubjectId: CUSTOMER_ID,
+        occurredAt: '2026-03-05T08:15:00Z',
+      },
+    ],
+    comments: [],
     ...overrides,
   };
 }
